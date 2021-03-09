@@ -9,7 +9,7 @@ echo ""
 ## Build Options Array
 echo ""
 echo "Build Options Array"
-my_array=($(curl https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/ | awk '{print $2}' | grep -oP '(?<=">).*?(?=</a>)' | grep $osVersion | sort -t "." -n -k1,1 -k2,2 -k3,2))
+my_array=($(curl https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/ | awk '{print $2}' | grep -oP '(?<=">).*?(?=</a>)' | grep $osVersion | sort -r -t "." -n -k1,1 -k2,2 -k3,2))
 echo ""
 
 ## Declare Options List/Array
