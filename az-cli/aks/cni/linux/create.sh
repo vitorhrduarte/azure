@@ -57,7 +57,7 @@ if [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTIT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --network-policy azure \
   --enable-cluster-autoscaler \
@@ -88,7 +88,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --enable-cluster-autoscaler \
   --min-count 1 \
@@ -120,7 +120,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --enable-cluster-autoscaler \
   --min-count 1 \
@@ -150,7 +150,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
@@ -175,8 +175,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
-  --enable-addons monitoring \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-managed-identity \
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
@@ -202,8 +201,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
-  --enable-addons monitoring \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-managed-identity \
   --network-policy azure \
   --nodepool-name sysnpool \
@@ -232,7 +230,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
@@ -259,7 +257,7 @@ else
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
   --debug
@@ -344,7 +342,7 @@ az vm create \
   --computer-name $VM_INTERNAL_NAME \
   --image $IMAGE \
   --size $VM_SIZE \
-  --admin-username $ADMIN_USERNAME \
+  --admin-username $GENERIC_ADMIN_USERNAME \
   --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
   --storage-sku $VM_STORAGE_SKU \
   --os-disk-size-gb $VM_OS_DISK_SIZE \
