@@ -263,20 +263,25 @@ else
   --debug
 fi
 
-## Add User nodepooll
-echo 'Add Node pool type User'
-az aks nodepool add \
-  -g $RG_NAME \
-  -n usernpool \
-  --cluster-name $CLUSTER_NAME \
-  --node-osdisk-type Ephemeral \
-  --node-osdisk-size $USER_NODE_DISK_SIZE \
-  --kubernetes-version $VERSION \
-  --tags "env=userpool" \
-  --mode User \
-  --node-count $USER_NODE_COUNT \
-  --node-vm-size $USER_NODE_SIZE \
-  --debug
+## Logic for VMASS only
+if [[ "$VMSETTYPE" == "AvailabilitySet" ]]; then
+  echo "Skip second Nodepool - VMAS dont have it"
+else
+  ## Add User nodepooll
+  echo 'Add Node pool type User'
+  az aks nodepool add \
+    -g $RG_NAME \
+    -n usernpool \
+    --cluster-name $CLUSTER_NAME \
+    --node-osdisk-type Ephemeral \
+    --node-osdisk-size $USER_NODE_DISK_SIZE \
+    --kubernetes-version $VERSION \
+    --tags "env=userpool" \
+    --mode User \
+    --node-count $USER_NODE_COUNT \
+    --node-vm-size $USER_NODE_SIZE \
+    --debug
+fi
 
 ### Create RG for VM
 ### Skip if RG already been Created
