@@ -109,26 +109,42 @@ echo ""
 
 ## Extend the expiration Date of Service Principle without changing the old password :
 echo ""
-echo "Extend current SP expiration date to the last day of current year"
-PS3='Your choice is: '
-select result in 'yes' 'no'; do
-    case $REPLY in
+echo "Extend current SP expiration date"
+read -p "Input desired date: format { mm/dd/yyyy } : " EXPIREDATE
+date "+%m/%d/%Y" -d $EXPIREDATE > /dev/null  2>&1
+IS_DATE_VALID=$?
+
+if [[ $IS_DATE_VALID == "1" ]]; then
+  echo "Invalid date: $IS_DATE_VALID"
+else
+  TODAY_DATE=$(date "+%m/%d/%Y")
+  TODAY_DATE_EPOCH=$(date -d $TODAY_DATE '+%s')
+  EXPIRE_DATE_EPOCH=$(date -d $EXPIREDATE '+%s')
+
+  if [ $EXPIRE_DATE_EPOCH -gt $TODAY_DATE_EPOCH ]; then   
+    echo "GO ahead? yes or no?"
+    PS3='Your choice is: '
+    select result in 'yes' 'no'; do
+      case $REPLY in
         [12])
             break
             ;;
         *)
             echo 'Invalid choice' >&2
-    esac
-done
+      esac
+    done
 
-echo ""
-echo "Resetting SP..."
-if [[ "$result" == "yes"  ]]; then
-   echo "Changing SP expiring date...."
-   az ad sp credential reset \
-     --name $SP_DISPLAY_NAME \
-     --password $SP_PASS \
-     --end-date '2021-12-31T11:59:59+00:00' > SP_Info_Final.txt
+    if [[ "$result" == "yes"  ]]; then
+      echo "Changing SP expiring date...."
+      az ad sp credential reset \
+        --name $SP_DISPLAY_NAME \
+        --password $SP_PASS \
+        --end-date $EXPIREDATE'T11:59:59+00:00' > SP_Info_Final.txt
+    fi
+  else
+    echo "Invalid Date. is less or equal to today"
+  fi
 fi
+
 
 echo "END"
