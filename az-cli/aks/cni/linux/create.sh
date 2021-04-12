@@ -1,4 +1,4 @@
-##!/usr/bin/env bash
+
 set -e
 . ./params.sh
 
@@ -235,6 +235,36 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
   --debug
+elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  echo "Creating AKS with AutoScaler"
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  az aks create \
+  --resource-group $RG_NAME \
+  --name $CLUSTER_NAME \
+  --service-principal $SP \
+  --client-secret $SPPASS \
+  --node-count $NODE_COUNT \
+  --node-vm-size $NODE_SIZE \
+  --location $LOCATION \
+  --load-balancer-sku standard \
+  --vnet-subnet-id $AKS_SNET_ID \
+  --vm-set-type $VMSETTYPE \
+  --kubernetes-version $VERSION \
+  --network-plugin $CNI_PLUGIN \
+  --service-cidr $AKS_CLUSTER_SRV_CIDR \
+  --dns-service-ip $AKS_CLUSTER_DNS \
+  --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
+  --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
+  --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --enable-cluster-autoscaler \
+  --min-count 1 \
+  --max-count 3 \
+  --nodepool-name sysnpool \
+  --nodepool-tags "env=syspool" \
+  --yes \
+  --debug
 else
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS without Monitor"
@@ -267,11 +297,12 @@ fi
 if [[ "$VMSETTYPE" == "AvailabilitySet" ]]; then
   echo "Skip second Nodepool - VMAS dont have it"
 else
+  if [[ "$HAS_2ND_NODEPOOL"  == "1" ]]; then
   ## Add User nodepooll
   echo 'Add Node pool type User'
   az aks nodepool add \
-    -g $RG_NAME \
-    -n usernpool \
+    --resource-group $RG_NAME \
+    --name usernpool \
     --cluster-name $CLUSTER_NAME \
     --node-osdisk-type Ephemeral \
     --node-osdisk-size $USER_NODE_DISK_SIZE \
@@ -281,6 +312,7 @@ else
     --node-count $USER_NODE_COUNT \
     --node-vm-size $USER_NODE_SIZE \
     --debug
+  fi
 fi
 
 ### Create RG for VM
