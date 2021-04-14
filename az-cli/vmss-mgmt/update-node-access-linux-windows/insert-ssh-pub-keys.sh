@@ -101,7 +101,7 @@ else
 
     for (( i=0; i<${TMP_AKS_NP_CHOICE_ARRAY[2]}; i++ )) 
     do
-      az vmss run-command invoke --command-id RunPowerShellScript --name aksnpwin --resource-group $AKS_RG_NPOOL \
+      az vmss run-command invoke --command-id RunPowerShellScript --name $AKS_NPOOL_NAME --resource-group $AKS_RG_NPOOL \
         --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
         --instance-id $i
     done
