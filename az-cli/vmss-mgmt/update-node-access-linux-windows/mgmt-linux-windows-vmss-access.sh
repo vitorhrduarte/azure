@@ -1,6 +1,6 @@
 ##!/usr/bin/env bash
 
-################################
+###############################
 # Arrays - Start
 ###############################
 
@@ -17,7 +17,7 @@ declare -a AKS_NP_INSTANCE_ID
 # Functions - Start
 ################################
 
- function getVmssNpDetails () {
+function getVmssNpDetails () {
    local NP_DETAILS=$1
   
    AKS_RG_NPOOL=""
@@ -25,6 +25,34 @@ declare -a AKS_NP_INSTANCE_ID
  
    AKS_RG_NPOOL=$(az vmss list --output json | jq --arg nprn $NP_DETAILS -r '.[] | select( .tags.poolName == $nprn ) | [ .resourceGroup ] | @csv' | sed 's/"//g')
    AKS_NPOOL_NAME=$(az vmss list --output json | jq --arg npn $NP_DETAILS -r '.[] | select( .tags.poolName == $npn ) | [ .name ] | @csv'  | sed 's/"//g')
+}
+
+function processVmssWindows () {
+  local FUNC_VMSS_ID=$1 
+  local FUNC_NP_NAME=$2
+  local FUNC_RG_NP=$3
+ 
+  az vmss run-command invoke --command-id RunPowerShellScript --name $FUNC_NP_NAME --resource-group $FUNC_RG_NP \
+    --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
+    --instance-id $FUNC_VMSS_ID
+}
+
+function processVmssLinux () {
+  local FUNC_VMSS_ID=$1
+  local FUNC_NP_NAME=$2
+  local FUNC_RG_NP=$3
+
+  az vmss run-command invoke --resource-group $FUNC_RG_NP --name $FUNC_NP_NAME --command-id RunShellScript  \
+    --instance-id $FUNC_VMSS_ID --command-id RunShellScript --scripts "$VMSS_COMMAND" 2&>1
+}
+
+function npIds () {
+  local FUNC_NP_NAME=$1
+  local FUNC_RG_NP=$2
+ 
+  TMP_NP_IDS=($(az vmss list-instances \
+     --resource-group $FUNC_RG_NP \
+     --name $FUNC_NP_NAME --output json | jq -r ".[] | [ .instanceId] | @csv" | sed 's/"//g'))
 }
 
 ###############################
@@ -46,7 +74,7 @@ done
 
 ## Define GUI Window - AKS
 HEIGHT=30
-WIDTH=60
+WIDTH=100
 CHOICE_HEIGHT=10
 BACKTITLE="AKS Details"
 TITLE="Choose AKS"
@@ -106,7 +134,7 @@ VMSS_COMMAND="echo $SSH_KEY_PUB >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_key
 
 if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
   echo "Nodepool with more than 1 Instance..."
-  PS3='Perform action in All(a) instances or just One(o) specific: '
+  PS3='Perform action in All(1) instances or just One(2) specific: '
   select result in 'All' 'One'; do
     case $REPLY in
         [12])
@@ -120,8 +148,7 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
   if [[ "$REPLY" == "2" ]]; then
     echo "Processing one ID"
     ## Get AKS VMSS Nodepool details
-    AKS_VMSS_NP_DETAILS=($(az vmss list \
-      --resource-group ${TMP_AKS_CHOICE_ARRAY[2]} \
+    AKS_VMSS_NP_DETAILS=($(az vmss list  --resource-group ${TMP_AKS_CHOICE_ARRAY[2]} \
       --output json | jq -r ".[] | [ .name, .resourceGroup, .tags.poolName ] | @csv"))
    
     ## Declare AKS Nodepool options List/Array
@@ -154,8 +181,7 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
     TMP_AKS_VMSS_NP_CHOICE_ARRAY=($(echo $TMP_AKS_VMSS_NP_CHOICE | tr -d '"' |tr "," "\n"))
 
     ## Get AKS VMSS Nodepool Instances    
-    AKS_NP_INSTANCE_ID=($(az vmss list-instances 
-      --resource-group ${TMP_AKS_CHOICE_ARRAY[2]} \
+    AKS_NP_INSTANCE_ID=($(az vmss list-instances --resource-group ${TMP_AKS_VMSS_NP_CHOICE_ARRAY[1]} \
       --name ${TMP_AKS_VMSS_NP_CHOICE_ARRAY[0]} \
       --output json | jq -r ".[] | [ .instanceId, .name, .resourceGroup ] | @csv"))
 
@@ -191,52 +217,39 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
  
     if [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Linux" ]]; then
       echo "Linux nodepool founded"
-      getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-      
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
-      az vmss run-command invoke --resource-group $AKS_RG_NPOOL --name $AKS_NPOOL_NAME --command-id RunShellScript  \
-        --instance-id ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} --command-id RunShellScript --scripts "$VMSS_COMMAND" --debug
-    
+      getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+      processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_RG_NPOOL $AKS_NPOOL_NAME
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
-        echo "Windows nodepool founded"
-        echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
-        getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-
-        az vmss run-command invoke --command-id RunPowerShellScript --name $AKS_NPOOL_NAME --resource-group $AKS_RG_NPOOL \
-            --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
-            --instance-id ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}
+      echo "Windows nodepool founded"
+      echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
+      getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+      processVmssWindows ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL 
     fi
   elif [[ "$REPLY" == "1"  ]]; then
     getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+    npIds $AKS_NPOOL_NAME $AKS_RG_NPOOL
  
-    ## Need to get and store in array all the available ID's for vmss's
-    TMP_NP_IDS=($(az vmss list-instances \
-      --resource-group $AKS_RG_NPOOL \
-      --name $AKS_NPOOL_NAME --output json | jq -r ".[] | [ .instanceId] | @csv" | sed 's/"//g'))
-
     echo "Perform action in ALL ids"
     if [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Linux" ]]; then
       echo "Linux nodepool founded"
-
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+      npIds $AKS_NPOOL_NAME $AKS_RG_NPOOL
 
       for i in "${TMP_NP_IDS[@]}"
       do
         echo "Processing instance ID = $i"
-        az vmss run-command invoke --resource-group $AKS_RG_NPOOL --name $AKS_NPOOL_NAME --command-id RunShellScript  \
-          --instance-id $i --command-id RunShellScript --scripts "$VMSS_COMMAND" 2&>1
+        processVmssLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
       done
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
       echo "Windows nodepool founded"
-
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+      npIds $AKS_NPOOL_NAME $AKS_RG_NPOOL
 
       for i in "${TMP_NP_IDS[@]}"
       do
         echo "Processing instance ID = $i"
-        az vmss run-command invoke --command-id RunPowerShellScript --name $AKS_NPOOL_NAME --resource-group $AKS_RG_NPOOL \
-         --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
-         --instance-id $i
+        processVmssWindows $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
       done
     fi      
   fi
@@ -245,31 +258,22 @@ else
   if [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Linux" ]]; then
     echo "Linux nodepool founded"
     getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-  
-    TMP_NP_IDS=($(az vmss list-instances \
-       --resource-group $AKS_RG_NPOOL \
-       --name $AKS_NPOOL_NAME --output json | jq -r ".[] | [ .instanceId] | @csv" | sed 's/"//g'))
-
+    npIds $AKS_NPOOL_NAME  $AKS_RG_NPOOL
+ 
     for i in "${TMP_NP_IDS[@]}"
     do
       echo "Processing instance ID = $i"
-      az vmss run-command invoke --resource-group $AKS_RG_NPOOL --name $AKS_NPOOL_NAME --command-id RunShellScript  \
-        --instance-id $i --command-id RunShellScript --scripts "$VMSS_COMMAND" 2&>1
+      processVmssLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
     done
   elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
     echo "Windows nodepool founded"
     getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-
-    TMP_NP_IDS=($(az vmss list-instances \
-      --resource-group $AKS_RG_NPOOL \
-      --name $AKS_NPOOL_NAME --output json | jq -r ".[] | [ .instanceId] | @csv" | sed 's/"//g'))
+    npIds $AKS_NPOOL_NAME  $AKS_RG_NPOOL
 
     for i in "${TMP_NP_IDS[@]}"
     do
       echo "Processing instance ID = $i"
-      az vmss run-command invoke --command-id RunPowerShellScript --name $AKS_NPOOL_NAME --resource-group $AKS_RG_NPOOL \
-        --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
-        --instance-id $i
+      processVmssWindows $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
     done
   fi
 fi  
