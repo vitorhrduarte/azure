@@ -43,7 +43,7 @@ function processVmssLinux () {
   local FUNC_RG_NP=$3
 
   az vmss run-command invoke --resource-group $FUNC_RG_NP --name $FUNC_NP_NAME --command-id RunShellScript  \
-    --instance-id $FUNC_VMSS_ID --command-id RunShellScript --scripts "$VMSS_COMMAND" 2&>1
+    --instance-id $FUNC_VMSS_ID --command-id RunShellScript --scripts "$VMSS_COMMAND"
 }
 
 function npIds () {
@@ -130,7 +130,8 @@ TMP_AKS_NP_CHOICE_ARRAY=($(echo $TMP_AKS_NP_CHOICE | tr -d '"' |tr "," "\n"))
 
 ## Be default azureuser
 VMSS_SSH_SUDO_USER=$GENERIC_ADMIN_USERNAME
-VMSS_COMMAND="echo $SSH_KEY_PUB >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
+VMSS_SSH_PUB_KEY=$(cat $ADMIN_USERNAME_SSH_KEYS_PUB)
+VMSS_COMMAND="echo $VMSS_SSH_PUB_KEY >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
 
 if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
   echo "Nodepool with more than 1 Instance..."
@@ -163,9 +164,9 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
     HEIGHT=30
     WIDTH=100
     CHOICE_HEIGHT=10
-    BACKTITLE="VMSS Details"
-    TITLE="Choose VMSS Nodepool"
-    MENU="Choose one of the following options:"
+    BACKTITLE="VMSS Nodepool Details"
+    TITLE="Confirm VMSS Nodepool"
+    MENU="Confirm following option:"
  
     ## Define User Choice
     AKS_VMSS_NP_CHOICE=$(dialog --clear \
@@ -218,8 +219,18 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
     if [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Linux" ]]; then
       echo "Linux nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
+
+      echo ""
+      echo "Arguments: ${TMP_AKS_NP_CHOICE_ARRAY[0]}"
+      echo ""
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-      processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_RG_NPOOL $AKS_NPOOL_NAME
+      echo ""
+      echo "Args 1: ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
+      echo "Args 2: $AKS_RG_NPOOL"
+      echo "Args 3: $AKS_NPOOL_NAME"
+      echo ""
+      processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL
+    echo "Output - 001 - end"
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
       echo "Windows nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
