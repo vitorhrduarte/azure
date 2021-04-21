@@ -221,7 +221,6 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
       processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL
-    echo "Output - 001 - end"
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
       echo "Windows nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
