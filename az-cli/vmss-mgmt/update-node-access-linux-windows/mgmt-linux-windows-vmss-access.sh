@@ -109,7 +109,7 @@ done
 
 ## Define GUI Window - VMSS
 HEIGHT=30
-WIDTH=60
+WIDTH=100
 CHOICE_HEIGHT=10
 BACKTITLE="VMSS Details"
 TITLE="Choose VMSS"
@@ -148,9 +148,9 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
   if [[ "$REPLY" == "2" ]]; then
     echo "Processing one ID"
     ## Get AKS VMSS Nodepool details
-    AKS_VMSS_NP_DETAILS=($(az vmss list  --resource-group ${TMP_AKS_CHOICE_ARRAY[2]} \
-      --output json | jq -r ".[] | [ .name, .resourceGroup, .tags.poolName ] | @csv"))
-   
+    AKS_VMSS_NP_DETAILS=($(az vmss list --resource-group ${TMP_AKS_CHOICE_ARRAY[2]} \
+      --output json | jq --arg npn ${TMP_AKS_NP_CHOICE_ARRAY[0]} -r '.[] | select( .tags.poolName == $npn  )  | [ .name, .resourceGroup, .tags.poolName ] | @csv'))
+
     ## Declare AKS Nodepool options List/Array
     declare -a AKS_VMSS_NP_OPTIONS
 
@@ -161,7 +161,7 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
  
     ## Define GUI Window - VMSS nodepool details
     HEIGHT=30
-    WIDTH=60
+    WIDTH=100
     CHOICE_HEIGHT=10
     BACKTITLE="VMSS Details"
     TITLE="Choose VMSS Nodepool"
@@ -196,7 +196,7 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
  
     ## Define GUI Window - AKS Nodepool IDS
     HEIGHT=30
-    WIDTH=60
+    WIDTH=100
     CHOICE_HEIGHT=10
     BACKTITLE="AKS Nodepool Instance Details"
     TITLE="Choose AKS Nodepool Instance ID"
