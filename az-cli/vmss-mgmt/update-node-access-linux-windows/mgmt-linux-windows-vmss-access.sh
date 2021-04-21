@@ -18,13 +18,10 @@ declare -a AKS_NP_INSTANCE_ID
 ################################
 
 function getVmssNpDetails () {
-   local NP_DETAILS=$1
-  
-   AKS_RG_NPOOL=""
-   AKS_NPOOL_NAME=""
+  local NP_DETAILS=$1
  
-   AKS_RG_NPOOL=$(az vmss list --output json | jq --arg nprn $NP_DETAILS -r '.[] | select( .tags.poolName == $nprn ) | [ .resourceGroup ] | @csv' | sed 's/"//g')
-   AKS_NPOOL_NAME=$(az vmss list --output json | jq --arg npn $NP_DETAILS -r '.[] | select( .tags.poolName == $npn ) | [ .name ] | @csv'  | sed 's/"//g')
+  AKS_RG_NPOOL=$(az vmss list --output json | jq --arg nprn $NP_DETAILS -r '.[] | select( .tags.poolName == $nprn ) | [ .resourceGroup ] | @csv' | sed 's/"//g')
+  AKS_NPOOL_NAME=$(az vmss list --output json | jq --arg npn $NP_DETAILS -r '.[] | select( .tags.poolName == $npn ) | [ .name ] | @csv'  | sed 's/"//g')
 }
 
 function processVmssWindows () {
@@ -221,16 +218,15 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
       processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL
+
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
       echo "Windows nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
       processVmssWindows ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL 
+
     fi
   elif [[ "$REPLY" == "1"  ]]; then
-    getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
-    npIds $AKS_NPOOL_NAME $AKS_RG_NPOOL
- 
     echo "Perform action in ALL ids"
     if [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Linux" ]]; then
       echo "Linux nodepool founded"
