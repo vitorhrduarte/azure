@@ -1,5 +1,13 @@
 ##!/usr/bin/env bash
 
+#####################################################
+VMSS_SSH_SUDO_USER="jagunce"
+VMSS_SSH_PUB_KEY=$(cat $ADMIN_USERNAME_SSH_KEYS_PUB)
+VMSS_TMP_USR_PASSWORD="P@ssword!123"
+####################################################
+
+VMSS_COMMAND="echo $VMSS_SSH_PUB_KEY >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
+
 ###############################
 # Arrays - Start
 ###############################
@@ -17,6 +25,25 @@ declare -a AKS_NP_INSTANCE_ID
 # Functions - Start
 ################################
 
+function addTempUserLinux () {
+    local FUNC_VMSS_ID=$1 
+    local FUNC_NP_NAME=$2
+    local FUNC_RG_NP=$3
+    local FUNC_TMP_USER=$4
+
+    local FUNC_PROCEED=$(az vmss run-command invoke --resource-group $FUNC_RG_NP --name $FUNC_NP_NAME --command-id RunShellScript --instance-id $FUNC_VMSS_ID --command-id RunShellScript \
+       --scripts "uCheck () { local u=\$1;  awk -F":" '{ print \$1 }' /etc/passwd | grep -x \$u > /dev/null; return \$? ; } && uCheck $FUNC_TMP_USER; if [ \$(echo \$?) = 1 ]; then echo "1"; else echo "0"; fi" | jq ".value[].message" |  grep -o '[0-1]' | xargs -L1 bash -c 'if [ $0 = 1 ]; then echo "DONTEXIST"; else echo "EXIST"; fi')
+
+    if [[ "$FUNC_PROCEED" == "EXIST" ]]; then
+      echo "User $FUNC_TMP_USER already present"
+      az vmss run-command invoke --resource-group $FUNC_RG_NP --name $FUNC_NP_NAME --command-id RunShellScript  \
+        --instance-id $FUNC_VMSS_ID --command-id RunShellScript --scripts "$VMSS_COMMAND"
+    else  
+      az vmss run-command invoke --resource-group $FUNC_RG_NP --name $FUNC_NP_NAME --command-id RunShellScript  \
+      --instance-id $FUNC_VMSS_ID --command-id RunShellScript --scripts "adduser --disabled-password --shell /bin/bash --home /home/$FUNC_TMP_USER --gecos \"\" $FUNC_TMP_USER && usermod -aG sudo $FUNC_TMP_USER && mkdir /home/$FUNC_TMP_USER/.ssh && chown $FUNC_TMP_USER:$FUNC_TMP_USER /home/$FUNC_TMP_USER/.ssh && chmod 700 /home/$FUNC_TMP_USER/.ssh && echo \"$FUNC_TMP_USER ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers.d/90-cloud-init-users"
+    fi  
+}
+
 function getVmssNpDetails () {
   local NP_DETAILS=$1
  
@@ -30,7 +57,7 @@ function processVmssWindows () {
   local FUNC_RG_NP=$3
  
   az vmss run-command invoke --command-id RunPowerShellScript --name $FUNC_NP_NAME --resource-group $FUNC_RG_NP \
-    --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
+    --scripts "\$sp = ConvertTo-SecureString $VMSS_TMP_USR_PASSWORD -AsPlainText -Force; New-LocalUser -Password \$sp -Name $VMSS_SSH_SUDO_USER; Add-LocalGroupMember -Group Administrators -Member $VMSS_SSH_SUDO_USER" \
     --instance-id $FUNC_VMSS_ID
 }
 
@@ -125,11 +152,6 @@ AKS_NP_CHOICE=$(dialog --clear \
 TMP_AKS_NP_CHOICE="${AKS_NP_CHOICE[0]}"
 TMP_AKS_NP_CHOICE_ARRAY=($(echo $TMP_AKS_NP_CHOICE | tr -d '"' |tr "," "\n"))
 
-## Be default azureuser
-VMSS_SSH_SUDO_USER=$GENERIC_ADMIN_USERNAME
-VMSS_SSH_PUB_KEY=$(cat $ADMIN_USERNAME_SSH_KEYS_PUB)
-VMSS_COMMAND="echo $VMSS_SSH_PUB_KEY >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
-
 if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
   echo "Nodepool with more than 1 Instance..."
   PS3='Perform action in All(1) instances or just One(2) specific: '
@@ -217,8 +239,8 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
       echo "Linux nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
       getVmssNpDetails ${TMP_AKS_NP_CHOICE_ARRAY[0]}
+      addTempUserLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL $VMSS_SSH_SUDO_USER
       processVmssLinux ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]} $AKS_NPOOL_NAME $AKS_RG_NPOOL
-
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
       echo "Windows nodepool founded"
       echo "Processing instance # ${TMP_AKS_INSTANCE_CHOICE_ARRAY[0]}"
@@ -236,6 +258,7 @@ if [ ${TMP_AKS_NP_CHOICE_ARRAY[2]} -gt 1 ]; then
       for i in "${TMP_NP_IDS[@]}"
       do
         echo "Processing instance ID = $i"
+        addTempUserLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL $VMSS_SSH_SUDO_USER
         processVmssLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
       done
     elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
@@ -260,6 +283,7 @@ else
     for i in "${TMP_NP_IDS[@]}"
     do
       echo "Processing instance ID = $i"
+      addTempUserLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL $VMSS_SSH_SUDO_USER
       processVmssLinux $i $AKS_NPOOL_NAME $AKS_RG_NPOOL
     done
   elif [[ ${TMP_AKS_NP_CHOICE_ARRAY[1]} == "Windows" ]]; then
