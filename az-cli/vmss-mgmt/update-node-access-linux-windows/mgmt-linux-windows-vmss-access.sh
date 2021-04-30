@@ -1,12 +1,60 @@
 ##!/usr/bin/env bash
 
-#####################################################
-VMSS_SSH_SUDO_USER="jagunce"
-VMSS_SSH_PUB_KEY=$(cat $ADMIN_USERNAME_SSH_KEYS_PUB)
-VMSS_TMP_USR_PASSWORD="P@ssword!123"
-####################################################
+showHelp() {
+cat << EOF  
+Usage: 
 
-VMSS_COMMAND="echo $VMSS_SSH_PUB_KEY >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
+bash mgmt-linux-windows-vmss-access.sh --help/-h  [for help]
+bash mgmt-linux-windows-vmss-access.sh -u/--username <username> -p/--password <password> -k/--pubkey <path_to_pub_key_pair>
+
+Install Pre-requisites jq and dialog
+
+-h, -help,          --help                  Display help
+
+-u, -username,      --username              Set username to acess VMSS nodes both Linux & Windows
+
+-p, -password,      --password              Set Password for the user in Windows Nodes. 
+                                            Pay attention to the password policy, like length and complexity
+
+-k, -pubkey,        --pubkey                Path to the public part of the key to user in Linux nodes.
+
+EOF
+}
+
+options=$(getopt -l "help::,username:,password:,privkey:" -o "h::u:p:k:" -a -- "$@")
+
+eval set -- "$options"
+
+while true
+do
+case $1 in
+-h|--help) 
+    showHelp
+    exit 0
+    ;;  
+-u|--username)
+    shift
+    VMSS_SSH_SUDO_USER=$1
+    ;;  
+-p|--password)
+    shift
+    VMSS_TMP_USR_PASSWORD=$1
+    ;;  
+-k|--privkey)
+    shift
+    PUBKEY=$1
+    ;;  
+--)
+    shift
+    break
+    exit 0    
+    ;;
+esac
+shift
+done
+
+VMSS_SSH_PUB_KEY=$(cat $PUBKEY)
+VMSS_COMMAND="echo $VMSS_SSH_PUB_KEY >> /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys && chown $VMSS_SSH_SUDO_USER:$VMSS_SSH_SUDO_USER /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys && chmod 700 /home/$VMSS_SSH_SUDO_USER/.ssh/authorized_keys"
 
 ###############################
 # Arrays - Start
