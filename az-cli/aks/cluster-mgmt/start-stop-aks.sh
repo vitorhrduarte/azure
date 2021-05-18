@@ -107,7 +107,7 @@ elif [[ "$AKS_OPERATION_TYPE" == "status" ]]; then
      AKS_CL_ARRAY=($(echo $akscl | tr -d '"' |tr "," "\n"))
   
      ## Execute Show Status
-     AKS_STATUS=$(az aks show --name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_CL_ARRAY[1]} -o json | jq -r '.powerState.code'
+     AKS_STATUS=$(az aks show --name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_CL_ARRAY[1]} -o json | jq -r '.powerState.code')
      echo "AKS Cluster ${AKS_CL_ARRAY[0]} in RG: ${AKS_CL_ARRAY[1]} is: " $AKS_STATUS
   done
 
