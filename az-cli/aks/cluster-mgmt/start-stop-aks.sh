@@ -12,10 +12,10 @@ Install Pre-requisites jq and dialog
 
 -h, -help,          --help                  Display help
 
--o, -operation,     --operation            	Set operation type for the AKS cluster
-											Start Or Stop Or Status
+-o, -operation,     --operation             Set operation type for the AKS cluster
+                                            Start Or Stop Or Status
 
--s, -scope,			--scope					Apply previous operation to All or One Cluster			
+-s, -scope,         --scope                 Apply previous operation to All or One Cluster			
 
 EOF
 }
