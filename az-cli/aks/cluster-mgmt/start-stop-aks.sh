@@ -155,6 +155,12 @@ for oper in "${OPER_TYPE[@]}"; do
         FIRST_MATCH=1
         echo "Operation Found... continue..."
 
+        if [[ $oper = "status" ]]; then
+          echo "Just Status"
+          break
+        fi
+        
+
 		for scpe in "${OPER_SCOPE[@]}"; do
     		if [[ $scpe = "$AKS_OPERATION_SCOPE" ]]; then
         		SECOND_MATCH=1
