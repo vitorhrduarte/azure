@@ -1,0 +1,229 @@
+##!/usr/bin/env bash
+set -e
+. ./params.sh
+
+## Create Resource Group for Cluster VNet
+echo "Create RG for Cluster Vnet"
+az group create \
+  --name $VNET_RG \
+  --location $LOCATION \
+  --debug
+
+## Create  VNet and Subnet
+echo "Create Vnet and Subnet for AKS Cluster"
+az network vnet create \
+    -g $VNET_RG \
+    -n $AKS_VNET \
+    --address-prefix $AKS_VNET_CIDR \
+    --subnet-name $AKS_SNET \
+    --subnet-prefix $AKS_SNET_CIDR \
+    --debug
+
+## get subnet info
+echo "Getting Subnet ID"
+AKS_SNET_ID=$(az network vnet subnet show \
+  --resource-group $VNET_RG \
+  --vnet-name $AKS_VNET \
+  --name $AKS_SNET \
+  --query id -o tsv)
+
+### create aks cluster
+echo "Creating AKS Cluster RG"
+az group create \
+  --name $RG_NAME \
+  --location $LOCATION \
+  --tags env=lab \
+  --debug
+
+## Create Proximity Placement Group
+az ppg create \
+   --name $PPG_NAME \
+   --resource-group $RG_NAME \
+   --location $LOCATION \
+   --type standard \
+   --debug
+
+## Getting PPG ID
+PPGResourceID=$(az ppg list -o json | jq --arg ppgname $PPG_NAME --arg ppgrg $RG_NAME -r '.[] | select( .name == $ppgname and .resourceGroup == $ppgrg ) | [ .id ] | @tsv')
+
+echo "Creating AKS Cluster"
+az aks create \
+  --resource-group $RG_NAME \
+  --name $CLUSTER_NAME \
+  --node-count $NODE_COUNT \
+  --node-vm-size $NODE_SIZE \
+  --location $LOCATION \
+  --load-balancer-sku standard \
+  --vnet-subnet-id $AKS_SNET_ID \
+  --vm-set-type $VMSETTYPE \
+  --kubernetes-version $VERSION \
+  --network-plugin $CNI_PLUGIN \
+  --service-cidr $AKS_CLUSTER_SRV_CIDR \
+  --dns-service-ip $AKS_CLUSTER_DNS \
+  --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
+  --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
+  --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --network-policy azure \
+  --enable-managed-identity \
+  --nodepool-name sysnpool \
+  --nodepool-tags "env=syspool" \
+  --ppg $PPGResourceID \
+  --zone $PPG_AKS_AVAILABILITY_ZONE \
+  --yes \
+  --debug 
+
+## Logic for VMASS only
+if [[ "$VMSETTYPE" == "AvailabilitySet" ]]; then
+  echo "Skip second Nodepool - VMAS dont have it"
+else
+  if [[ "$HAS_2ND_NODEPOOL"  == "1" ]]; then
+  ## Add User nodepooll
+  echo 'Add Node pool type User'
+  az aks nodepool add \
+    --resource-group $RG_NAME \
+    --name usernpool \
+    --cluster-name $CLUSTER_NAME \
+    --node-osdisk-type Ephemeral \
+    --node-osdisk-size $USER_NODE_DISK_SIZE \
+    --kubernetes-version $VERSION \
+    --tags "env=userpool" \
+    --mode User \
+    --node-count $USER_NODE_COUNT \
+    --node-vm-size $USER_NODE_SIZE \
+    --ppg $PPGResourceID \
+    --zone $PPG_AKS_AVAILABILITY_ZONE \
+    --debug
+  fi
+fi
+
+### Create RG for VM
+### Skip if RG already been Created
+echo "Create RG if required"
+if [ $(az group list -o table | awk '{print $1}' | grep "^$RG_NAME" | wc -l) -eq 1 ]; then echo "RG Already there! Continue"; else  az group create --location $RG_LOCATION --name $RG_NAME; fi
+
+### VM SSS Client subnet Creation
+echo "Create VM Subnet"
+az network vnet subnet create \
+  -g $RG_NAME \
+  --vnet-name $VNET_NAME \
+  -n $VM_SUBNET_NAME \
+  --address-prefixes $VM_SNET_CIDR \
+  --debug
+
+
+### VM NSG Create
+echo "Create NSG"
+az network nsg create \
+  -g $RG_NAME \
+  -n $VM_NSG_NAME \
+  --debug
+
+## Public IP Create
+echo "Create Public IP"
+az network public-ip create --name $VM_PUBLIC_IP_NAME --resource-group $RG_NAME --debug
+
+
+### VM Nic Create
+echo "Create VM Nic"
+az network nic create \
+  -g $RG_NAME \
+  --vnet-name $VNET_NAME \
+  --subnet $VNET_SUBNET_NAME \
+  -n $VM_NIC_NAME \
+  --network-security-group $VM_NSG_NAME \
+  --debug 
+
+## Attache Public IP to VM NIC
+echo "Attach Public IP to VM NIC"
+az network nic ip-config update \
+  --name $VM_DEFAULT_IP_CONFIG \
+  --nic-name $VM_NIC_NAME \
+  --resource-group $RG_NAME \
+  --public-ip-address $VM_PUBLIC_IP_NAME \
+  --debug
+
+## Update NSG in VM Subnet
+echo "Update NSG in VM Subnet"
+az network vnet subnet update \
+  --resource-group $RG_NAME \
+  --name $VNET_SUBNET_NAME \
+  --vnet-name $VNET_NAME \
+  --network-security-group $VM_NSG_NAME \
+  --debug
+
+### Create VM
+echo "Create VM"
+az vm create \
+  --resource-group $RG_NAME \
+  --authentication-type $AUTH_TYPE \
+  --name $VM_NAME \
+  --computer-name $VM_INTERNAL_NAME \
+  --image $IMAGE \
+  --size $VM_SIZE \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --storage-sku $VM_STORAGE_SKU \
+  --os-disk-size-gb $VM_OS_DISK_SIZE \
+  --os-disk-name $VM_OS_DISK_NAME \
+  --nics $VM_NIC_NAME \
+  --tags $TAGS \
+  --debug
+
+echo "Sleeping 45s - Allow time for Public IP"
+sleep 45
+
+### Output Public IP of VM
+echo "Public IP of VM is:"
+#VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress, name:[].name, tags:[].tags.purpose}" -o json | jq -r ".ip, .name, .tags | @csv")
+VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
+VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
+echo $VM_PUBLIC_IP_PARSED
+
+### Allow SSH from my Home
+echo "Update VM NSG to allow SSH"
+az network nsg rule create \
+  --nsg-name $VM_NSG_NAME \
+  --resource-group $RG_NAME \
+  --name ssh_allow \
+  --priority 100 \
+  --source-address-prefixes $MY_HOME_PUBLIC_IP \
+  --source-port-ranges '*' \
+  --destination-address-prefixes $VM_PRIV_IP \
+  --destination-port-ranges 22 \
+  --access Allow \
+  --protocol Tcp \
+  --description "Allow from MY ISP IP"
+
+### Input Key Fingerprint
+echo "Input Key Fingerprint" 
+#ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+
+echo "Sleeping 45s"
+sleep 45
+
+### Copy to VM AKS SSH Priv Key
+echo "Copy to VM priv Key of AKS Cluster"
+scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+
+### Set Correct Permissions on Priv Key
+echo "Set good Permissions on AKS Priv Key"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
+
+
+### Get Credentials
+echo "Getting Cluster Credentials"
+az aks get-credentials --resource-group $RG_NAME --name $CLUSTER_NAME --overwrite-existing
+echo "Public IP of the VM"
+echo $VM_PUBLIC_IP_PARSED
+
+### Create the SSH into Node Helper file
+echo "Process SSH into Node into SSH VM"
+AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
+AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
+
+
+
+
