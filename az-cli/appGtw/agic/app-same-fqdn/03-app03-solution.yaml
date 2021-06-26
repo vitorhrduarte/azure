@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: h3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: h3
+  template:
+    metadata:
+      labels:
+        app: h3
+    spec:
+      containers:
+      - name: h3
+        image: mcr.microsoft.com/azuredocs/aks-helloworld:v1
+        ports:
+        - containerPort: 80
+        env:
+        - name: TITLE
+          value: "AKS SITE ---- h3 ----"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: h3
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+  selector:
+    app: h3

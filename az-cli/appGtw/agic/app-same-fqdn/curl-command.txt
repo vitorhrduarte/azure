@@ -1,0 +1,1 @@
+echo eva01 /h1 |  xargs -l bash -c 'curl --resolve $0.westus.cloudapp.azure.com:80:137.135.41.17 http://$0.westus.cloudapp.azure.com$1'
