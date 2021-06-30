@@ -1,0 +1,34 @@
+################################
+fix the openssl RND requirements
+################################
+touch ~/.rnd
+
+
+########################
+Create cert key for user
+########################
+openssl genrsa -out johndoe.key 2048
+
+
+########################
+Create cert CSR for user
+########################
+openssl req -new -key johndoe.key -out johndoe.csr -subj "/CN=johndoe/O=group1"
+
+
+###################################################
+Signing the CSR with Cluster CA key and Certificate
+###################################################
+openssl x509 -req -in johndoe.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out johndoe.crt -days 500
+
+
+######################
+View Cert Sign Request
+######################
+openssl req  -noout -text -in ./server.csr
+
+
+################
+View Certificate
+################
+openssl x509  -noout -text -in ./server.crt
