@@ -1,8 +1,9 @@
 Needed Vars:
-ADMIN_USERNAME_SSH_KEYS_PUB
-[Need to have full path to the *.pub part of the SSH key pair]
-
-
+(suggest to have them defined in ~/.bashrc)
+$ADMIN_USERNAME_SSH_KEYS_PUB
+  [Need to have full path to the *.pub part of the SSH key pair]
+$GENERIC_ADMIN_USERNAME
+  [Need to define the user name to be used in linux nodes, or revert back to the default: azureuser]
 
 Hardcoded values:
 In this command:
@@ -10,8 +11,7 @@ az vmss run-command invoke --command-id RunPowerShellScript --name aksnpwin --re
         --scripts '$sp = ConvertTo-SecureString "P@ssword!123" -AsPlainText -Force; New-LocalUser -Password $sp -Name "tmp-gits"; Add-LocalGroupMember -Group Administrators -Member "tmp-gits"' \
         --instance-id $i
 
-ConvertTo-SecureString "P@ssword!123"
--Name "tmp-gits"
+ConvertTo-SecureString "P@ssword!123" -Name "tmp-gits"
 
 
 Notes:
