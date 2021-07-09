@@ -98,6 +98,33 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --nodepool-tags "env=syspool" \
   --yes \
   --debug
+elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  echo "Creating AKS with Monitor Enabled, Managed Idenity"
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  az aks create \
+  --resource-group $RG_NAME \
+  --name $CLUSTER_NAME \
+  --node-count $NODE_COUNT \
+  --node-vm-size $NODE_SIZE \
+  --location $LOCATION \
+  --load-balancer-sku standard \
+  --vnet-subnet-id $AKS_SNET_ID \
+  --vm-set-type $VMSETTYPE \
+  --kubernetes-version $VERSION \
+  --network-plugin $CNI_PLUGIN \
+  --service-cidr $AKS_CLUSTER_SRV_CIDR \
+  --dns-service-ip $AKS_CLUSTER_DNS \
+  --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
+  --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
+  --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --enable-addons monitoring \
+  --enable-managed-identity \
+  --nodepool-name sysnpool \
+  --nodepool-tags "env=syspool" \
+  --yes \
+  --debug  
 elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor Enabled, AutoScaler"
@@ -259,6 +286,36 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-cluster-autoscaler \
+  --min-count 1 \
+  --max-count 3 \
+  --nodepool-name sysnpool \
+  --nodepool-tags "env=syspool" \
+  --yes \
+  --debug
+elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 1 ]]; then
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  echo "Creating AKS with AutoScaler MSI and Network Policy"
+  echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+  az aks create \
+  --resource-group $RG_NAME \
+  --name $CLUSTER_NAME \
+  --node-count $NODE_COUNT \
+  --node-vm-size $NODE_SIZE \
+  --location $LOCATION \
+  --load-balancer-sku standard \
+  --vnet-subnet-id $AKS_SNET_ID \
+  --vm-set-type $VMSETTYPE \
+  --kubernetes-version $VERSION \
+  --network-plugin $CNI_PLUGIN \
+  --service-cidr $AKS_CLUSTER_SRV_CIDR \
+  --dns-service-ip $AKS_CLUSTER_DNS \
+  --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
+  --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
+  --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --enable-cluster-autoscaler \
+  --enable-managed-identity \
+  --network-policy azure \
   --min-count 1 \
   --max-count 3 \
   --nodepool-name sysnpool \
@@ -429,7 +486,6 @@ scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN
 echo "Set good Permissions on AKS Priv Key"
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
 
-
 ### Get Credentials
 echo "Getting Cluster Credentials"
 az aks get-credentials --resource-group $RG_NAME --name $CLUSTER_NAME --overwrite-existing
@@ -441,7 +497,4 @@ echo "Process SSH into Node into SSH VM"
 AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
 AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
-
-
-
 
