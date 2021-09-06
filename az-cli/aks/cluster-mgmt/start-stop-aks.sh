@@ -100,7 +100,7 @@ function printTable()
 
             if [[ "$(isEmptyString "${table}")" = 'false' ]]
             then
-                echo -e "${table}" | column -s '#' -t | awk '/^\+/{gsub(" ", "-", $0)}1'
+                echo -e "${table}" | column -s '#' -t | sed 's/^[^ ]* //' | sed 's/^[^ ]* //' | awk '/^\+/{gsub(" ", "-", $0)}1' 
             fi
         fi
     fi
