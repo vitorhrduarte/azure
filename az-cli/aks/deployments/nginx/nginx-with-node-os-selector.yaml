@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-02
+  labels:
+    app: nginx-01
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-01
+  template:
+    metadata:
+      labels:
+        app: nginx-01
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        kubernetes.io/os: linux
+        agentpool: lunp01
