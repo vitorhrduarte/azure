@@ -99,15 +99,18 @@ function trimString()
 
 
 
-AKS_ARRAY=($(az aks list --output json | jq -r ".[] | [ .name, .location, .resourceGroup, .kubernetesVersion, .provisioningState, .fqdn ] | @csv"))
+AKS_ARRAY=($(az aks list --output json | jq -r ".[] | [ .name, .location, .resourceGroup, .kubernetesVersion, .provisioningState, .azurePortalFqdn ] | @csv"))
 
 declare -a AKS_STATUS_ARRAY
 AKS_STATUS_ARRAY=("ClusterName,Location,RG,K8SVersion,Status,FQDN")
 
 for akscl in "${AKS_ARRAY[@]}"; do
      AKS_CL_ARRAY=($(echo $akscl | tr -d '"' |tr "," "\n"))
+     
+     ## Get Cluster Status
+     AKS_STATUS=$(az aks show --name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_CL_ARRAY[2]} -o json | jq -r '.powerState.code')
 
-     AKS_STATUS_ARRAY+=("${AKS_CL_ARRAY[0]},${AKS_CL_ARRAY[1]},${AKS_CL_ARRAY[2]},${AKS_CL_ARRAY[3]},${AKS_CL_ARRAY[4]},${AKS_CL_ARRAY[5]}")
+     AKS_STATUS_ARRAY+=("${AKS_CL_ARRAY[0]},${AKS_CL_ARRAY[1]},${AKS_CL_ARRAY[2]},${AKS_CL_ARRAY[3]},$AKS_STATUS,${AKS_CL_ARRAY[5]}")
 done
 
 clear
