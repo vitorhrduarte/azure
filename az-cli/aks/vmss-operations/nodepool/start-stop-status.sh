@@ -98,6 +98,8 @@ function trimString()
 }
 
 
+function getVmss()
+{
 AKS_ARRAY=($(az aks list --output json | jq -r ".[] | [ .name, .resourceGroup,.nodeResourceGroup ] | @csv"))
 
 declare -a AKS_STATUS_ARRAY
@@ -133,6 +135,9 @@ for vmss in "${AKS_ARRAY[@]}"; do
 done
 
 clear
+
+AKS_VMSS_LIST=()
+
 for i in "${AKS_VMSS_ARRAY[@]}"
 do
    AKS_VMSS_LIST+=$i"\n"
@@ -140,32 +145,46 @@ done
 
 printTable ',' $AKS_VMSS_LIST
 
+}
 
+getVmss
 
-read -p "start/stop/exit any VMSS?: " VMSSANSWER
+CONTINUE="yes"
 
-if [[ $VMSSANSWER == "start" ]] 
-then
-   read -p "AKS VMSS Name: " VMSSNAME
-   read -p "AKS VMSS Infra RG: " VMSSINFRARG
+while [[ "$CONTINUE" == "yes" ]]
+do
+    read -p "start/stop VMSS or exit: " VMSSANSWER
 
-   echo "Starting VMSS..."
-   az vmss start --name $VMSSNAME --resource-group $VMSSINFRARG --debug
-elif [[ $VMSSANSWER == "stop" ]]
-then
-   read -p "AKS VMSS Name: " VMSSNAME
-   read -p "AKS VMSS Infra RG: " VMSSINFRARG
+	if [[ "$VMSSANSWER" == "start" ]]  
+	then
+		read -p "AKS VMSS Name: " VMSSNAME
+		read -p "AKS VMSS Infra RG: " VMSSINFRARG
 
-   echo "Stoping VMSS..."
-   az vmss stop --name $VMSSNAME --resource-group $VMSSINFRARG --debug 
-elif [[ $VMSSANSWER == "exit" ]]
-then
-   echo "Exiting"
-   exit
-else
-   echo "No valid answer provided... Exiting"
-   exit
-fi
- 
+		echo "Starting VMSS..."
+		az vmss start --name $VMSSNAME --resource-group $VMSSINFRARG
+    
+        getVmss
 
+    elif [[ "$VMSSANSWER" == "stop" ]]
+	then
+   		read -p "AKS VMSS Name: " VMSSNAME
+   		read -p "AKS VMSS Infra RG: " VMSSINFRARG
+
+   		echo "Stoping VMSS..."
+   		az vmss stop --name $VMSSNAME --resource-group $VMSSINFRARG 
+	
+        getVmss
+
+    elif [[ "$VMSSANSWER" == "exit" ]]
+	then
+   		echo "Exiting"
+        CONTINUE="no"
+   		exit
+    
+    else
+   		echo "No valid answer provided..."
+        echo "Please provide a valid answer..."
+        CONTINUE="yes"
+    fi
+done
 
