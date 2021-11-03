@@ -108,12 +108,12 @@ AKS_VMSS_ARRAY=("Name,npK8S,RG,AKSStatus,AKSName,AKSInfraRG,VMSSName,VMSSStatus"
 for vmss in "${AKS_ARRAY[@]}"; do
      AKS_CL_ARRAY=($(echo $vmss | tr -d '"' |tr "," "\n"))
      
-     AKS_VMSS_STATUS_ARRAY=($(az aks nodepool list --cluster-name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_CL_ARRAY[1]} --output json | jq -r ".[] | [ .name, .orchestratorVersion, .resourceGroup, .powerState.code ] | @csv"))
+     AKS_VMSS_STATUS_ARRAY=($(az aks nodepool list --cluster-name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_CL_ARRAY[1]} --output json 2>/dev/null | jq -r ".[] | [ .name, .orchestratorVersion, .resourceGroup, .powerState.code ] | @csv"))
 
     for i in "${AKS_VMSS_STATUS_ARRAY[@]}"; do
        AKS_VMSS=($(echo $i | tr -d '"' |tr "," "\n"))
        
-       AKS_VMSS_INFO=$(az aks show --name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_VMSS[2]} --output json | jq -r ".nodeResourceGroup")
+       AKS_VMSS_INFO=$(az aks show --name ${AKS_CL_ARRAY[0]} --resource-group ${AKS_VMSS[2]} --output json  2>/dev/null | jq -r ".nodeResourceGroup")
        
        AKS_VMSS_DETAILS=$(az vmss list  --resource-group $AKS_VMSS_INFO  --output json | jq -r ".[] | select( .name | contains(\"${AKS_VMSS[0]}\")) | [ .name] | @tsv")
 
