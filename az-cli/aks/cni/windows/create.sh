@@ -296,11 +296,20 @@ az network nsg rule create \
 
 ### SSH Input Key Fingerprint
 echo "Input Key Fingerprint" 
-#ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+
+FINGER_PRINT_CHECK=$(ssh-keygen -F $SSH_VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $SSH_VM_PUBLIC_IP_PARSED | wc -l)
+
+while [[ "$FINGER_PRINT_CHECK" = "0" ]]
+do
+    echo "not good to go: $FINGER_PRINT_CHECK"
+    echo "Sleeping for 5s..."
+    sleep 5
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $SSH_VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $SSH_VM_PUBLIC_IP_PARSED | wc -l)
+done
+
+echo "Go to go with Input Key Fingerprint"
 ssh-keygen -F $SSH_VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $SSH_VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
 
-echo "Sleeping 45s"
-sleep 45
 
 ### SSH Copy to VM AKS SSH Priv Key
 echo "Copy to VM priv Key of AKS Cluster"
