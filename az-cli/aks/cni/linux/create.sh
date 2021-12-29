@@ -59,7 +59,7 @@ if [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTIT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
-  --network-policy azure \
+  --network-policy $AKS_NET_NPOLICY \
   --enable-cluster-autoscaler \
   --min-count 1 \
   --max-count 3 \
@@ -230,7 +230,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-managed-identity \
-  --network-policy azure \
+  --network-policy $AKS_NET_NPOLICY \
   --nodepool-name sysnpool \
   --nodepool-tags "env=syspool" \
   --yes \
@@ -315,7 +315,7 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-cluster-autoscaler \
   --enable-managed-identity \
-  --network-policy azure \
+  --network-policy $AKS_NET_NPOLICY \
   --min-count 1 \
   --max-count 3 \
   --nodepool-name sysnpool \
@@ -485,9 +485,6 @@ done
 
 echo "Go to go with Input Key Fingerprint"
 ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
-
-echo "Sleeping 45s"
-sleep 45
 
 ### Copy to VM AKS SSH Priv Key
 echo "Copy to VM priv Key of AKS Cluster"
