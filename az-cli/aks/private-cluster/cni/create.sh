@@ -203,5 +203,5 @@ scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN
 
 ## Access VM
 echo "Access VM" 
-ssh gits@$VM_PUBLIC_IP -i $SSH_PRIV_KEY
+ssh $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP -i $SSH_PRIV_KEY
 
