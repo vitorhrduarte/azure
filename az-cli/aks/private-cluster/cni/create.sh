@@ -106,7 +106,11 @@ az aks create \
   --service-cidr $AKS_SERVICE_CIDR \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
-  --debug 
+  --windows-admin-password $WINDOWS_AKS_ADMIN_PASSWORD \
+  --windows-admin-username $GENERIC_ADMIN_USERNAME 
+#  --network-policy calico \
+#  --zone 1 2 \
+#  --debug 
 
 ## Configure Private DNS Link to Jumpbox VM
 echo "Configuring Private DNS Link to Jumpbox VM"
@@ -169,7 +173,35 @@ az vm create \
   --authentication-type $LJ_AUTH_TYPE \
   --debug
 
-## connect to vm
-PUBLIC_IP=$(az network public-ip show -n $LJ_VM_PUBIP -g $LJ_VM_RG --query ipAddress -o tsv)
-ssh gits@$PUBLIC_IP -i $ADMIN_USERNAME_SSH_KEYS_PUB
+
+## Output Public IP of VM
+VM_PUBLIC_IP=$(az network public-ip show \
+  --name $LJ_VM_PUBIP \
+  --resource-group $LJ_VM_RG \
+  --query ipAddress \
+  --output tsv)
+echo $VM_PUBLIC_IP
+
+## Get Finger Print
+echo "Get Finger Print"
+FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
+
+while [[ "$FINGER_PRINT_CHECK" = "0" ]]
+do
+    echo "not good to go: $FINGER_PRINT_CHECK"
+    echo "Sleeping for 5s..."
+    sleep 5
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
+done
+
+echo "Go to go with Input Key Fingerprint"
+ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP >> ~/.ssh/known_hosts
+
+## Copy to VM AKS SSH Priv Key
+echo "Copy to VM priv Key of AKS Cluster"
+scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+
+## Access VM
+echo "Access VM" 
+ssh gits@$VM_PUBLIC_IP -i $SSH_PRIV_KEY
 
