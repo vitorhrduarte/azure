@@ -91,6 +91,18 @@ spec:
     tenantId: $TENANTID                   # The tenant ID of the key vault
 " >> secretproviderclass.yaml
 
+## Apply SPClass
+echo "Apply SPClass"
+kubectl apply -f secretproviderclass.yaml
+
+## Create POD
+echo "Create POD"
+kubectl apply -f pod.yaml
+
+## Sleep 30s
+echo "Sleep 30s"
+sleep 30
+
 ## show secrets held in secrets-store
 kubectl exec busybox-secrets-store-inline-user-msi -- ls /mnt/secrets-store/
  
