@@ -12,12 +12,12 @@ az group create \
 ## Create  VNet and Subnet
 echo "Create Vnet and Subnet for AKS Cluster"
 az network vnet create \
-    -g $AKS_VNET_RG \
-    -n $AKS_VNET \
-    --address-prefix $AKS_VNET_CIDR \
-    --subnet-name $AKS_SNET \
-    --subnet-prefix $AKS_SNET_CIDR \
-    --debug
+  --resource-group $AKS_VNET_RG \
+  --name $AKS_VNET \
+  --address-prefix $AKS_VNET_CIDR \
+  --subnet-name $AKS_SNET \
+  --subnet-prefix $AKS_SNET_CIDR \
+  --debug
 
 ## get subnet info
 echo "Getting Subnet ID"
@@ -27,12 +27,12 @@ AKS_SNET_ID=$(az network vnet subnet show \
   --name $AKS_SNET \
   --query id -o tsv)
 
-### AppGtw Client subnet Creation
+## AppGtw Client subnet Creation
 echo "Create AppGtw Subnet"
 az network vnet subnet create \
-  -g $AKS_RG_NAME \
+  --resource-group $AKS_RG_NAME \
   --vnet-name $AKS_VNET \
-  -n $APPGTW_SUBNET_NAME \
+  --name $APPGTW_SUBNET_NAME \
   --address-prefixes $APPGTW_SNET_CIDR \
   --debug
 
@@ -44,7 +44,7 @@ APPGTW_SNET_ID=$(az network vnet subnet show \
   --name $APPGTW_SUBNET_NAME \
   --query id -o tsv)
 
-### create aks cluster
+## create aks cluster
 echo "Creating AKS Cluster RG"
 az group create \
   --name $AKS_RG_NAME \
@@ -305,11 +305,11 @@ else
   --debug
 fi
 
-## Add User nodepooll
+## Add User nodepool
 echo 'Add Node pool type User'
 az aks nodepool add \
-  -g $AKS_RG_NAME \
-  -n usernpool \
+  --resource-group $AKS_RG_NAME \
+  --name usernpool \
   --cluster-name $AKS_CLUSTER_NAME \
   --node-osdisk-type Ephemeral \
   --node-osdisk-size $AKS_NODE_USR_DISK_SIZE \
@@ -320,40 +320,36 @@ az aks nodepool add \
   --node-vm-size $AKS_NODE_USR_SIZE \
   --debug
 
-### Create RG for VM
-### Skip if RG already been Created
-echo "Create RG if required"
-if [ $(az group list -o table | awk '{print $1}' | grep "^$AKS_RG_NAME" | wc -l) -eq 1 ]; then echo "RG Already there! Continue"; else  az group create --location $AKS_LOCATION --name $AKS_RG_NAME; fi
-
-### VM SSS Client subnet Creation
+## VMSS Client subnet Creation
 echo "Create VM Subnet"
 az network vnet subnet create \
-  -g $AKS_RG_NAME \
+  --resource-group $AKS_RG_NAME \
   --vnet-name $AKS_VNET \
-  -n $JUMP_VM_SUBNET_NAME \
+  --name $JUMP_VM_SUBNET_NAME \
   --address-prefixes $JUMP_VM_SNET_CIDR \
   --debug
 
-
-### VM NSG Create
+## VM NSG Create
 echo "Create NSG"
 az network nsg create \
-  -g $AKS_RG_NAME \
-  -n $JUMP_VM_NSG_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $JUMP_VM_NSG_NAME \
   --debug
 
 ## Public IP Create
 echo "Create Public IP"
-az network public-ip create --name $JUMP_VM_PUBLIC_IP_NAME --resource-group $AKS_RG_NAME --debug
-
+az network public-ip create \
+  --name $JUMP_VM_PUBLIC_IP_NAME \
+  --resource-group $AKS_RG_NAME \
+  --debug
 
 ## VM Nic Create
 echo "Create VM Nic"
 az network nic create \
-  -g $AKS_RG_NAME \
+  --resource-group $AKS_RG_NAME \
   --vnet-name $AKS_VNET \
   --subnet $JUMP_VM_SUBNET_NAME \
-  -n $JUMP_VM_NIC_NAME \
+  --name $JUMP_VM_NIC_NAME \
   --network-security-group $JUMP_VM_NSG_NAME \
   --debug 
 
@@ -415,28 +411,62 @@ az network nsg rule create \
   --protocol Tcp \
   --description "Allow from MY ISP IP"
 
-### Input Key Fingerprint
-echo "Input Key Fingerprint" 
+
+## Get Finger Print
+echo "Get Finger Print"
+FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+
+while [[ "$FINGER_PRINT_CHECK" = "0" ]]
+do
+    echo "not good to go: $FINGER_PRINT_CHECK"
+    echo "Sleeping for 5s..."
+    sleep 5
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+done
+
+echo "Go to go with Input Key Fingerprint"
 ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
 
-echo "Sleeping 45s"
-sleep 45
 
 ### Copy to VM AKS SSH Priv Key
 echo "Copy to VM priv Key of AKS Cluster"
-scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+scp -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
 
 ### Set Correct Permissions on Priv Key
 echo "Set good Permissions on AKS Priv Key"
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
 
+## Update VM
+echo "Update VM"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt update && sudo apt upgrade -y
 
+## VM Install software
+echo "VM Install software"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
+
+## Add Az Cli
+echo "Add Az Cli"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+
+## Install Kubectl
+echo "Install Kubectl"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
+
+## Install JQ
+echo "Install JQ"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install jq
+
+## Add Kubectl completion
+echo "Add Kubectl completion"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
+
+## Validate ACR
 if [[ $HAS_ACR -eq 1 ]]; then
 ## Attach AKS to ACR
 echo "Attacing AKS to ACR"
 az aks update \
-  -g $AKS_RG_NAME \
-  -n $AKS_CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --attach-acr $ACR_NAME \
   --debug
 fi
