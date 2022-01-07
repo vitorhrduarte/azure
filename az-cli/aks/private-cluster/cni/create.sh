@@ -201,6 +201,31 @@ ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP >> ~/.ssh/
 echo "Copy to VM priv Key of AKS Cluster"
 scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/home/$GENERIC_ADMIN_USERNAME/id_rsa
 
+
+## Update VM
+echo "Update VM"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update && sudo apt upgrade -y
+
+## VM Install software
+echo "VM Install software"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt install tcpdump wget snap dnsutils -y
+
+## Add Az Cli
+echo "Add Az Cli"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+
+## Install Kubectl
+echo "Install Kubectl"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo snap install kubectl --classic
+
+## Install JQ
+echo "Install JQ"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo snap install jq
+
+## Add Kubectl completion
+echo "Add Kubectl completion"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "source <(kubectl completion bash)"
+
 ## Access VM
 echo "Access VM" 
 ssh $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP -i $SSH_PRIV_KEY
