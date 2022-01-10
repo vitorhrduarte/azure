@@ -332,15 +332,15 @@ ssh-keygen -F $SSH_VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $SSH_VM_PUBLI
 
 ## SSH Copy to VM AKS SSH Priv Key
 echo "Copy to VM priv Key of AKS Cluster"
-scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY gits@$SSH_VM_PUBLIC_IP_PARSED:/home/gits/id_rsa
+scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED:/home/gits/id_rsa
 
 ## SSH Set Correct Permissions on Priv Key
 echo "Set good Permissions on AKS Priv Key"
-ssh -i $SSH_PRIV_KEY gits@$SSH_VM_PUBLIC_IP_PARSED "chmod 700 /home/gits/id_rsa"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "chmod 700 /home/gits/id_rsa"
 
 ## Install and update software
 echo "Updating VM and Stuff"
-ssh -i $SSH_PRIV_KEY gits@$SSH_VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
 
 ## VM Install software
 echo "VM Install software"
@@ -364,7 +364,7 @@ ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "source <(
 
 ## Add Win password
 echo "Add Win password"
-ssh -i $SSH_PRIV_KEY gits@$SSH_VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
 
 ## AKS Get Credentials
 echo "Getting Cluster Credentials"
