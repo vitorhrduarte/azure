@@ -494,6 +494,34 @@ scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN
 echo "Set good Permissions on AKS Priv Key"
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
 
+## Install and update software
+echo "Updating VM and Stuff"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
+
+## VM Install software
+echo "VM Install software"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
+
+## Add Az Cli
+echo "Add Az Cli"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+
+## Install Kubectl
+echo "Install Kubectl"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
+
+## Install JQ
+echo "Install JQ"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo snap install jq
+
+## Add Kubectl completion
+echo "Add Kubectl completion"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
+
+## Add Win password
+echo "Add Win password"
+ssh -i $SSH_PRIV_KEY gits@$SSH_VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
+
 ### Get Credentials
 echo "Getting Cluster Credentials"
 az aks get-credentials --resource-group $RG_NAME --name $CLUSTER_NAME --overwrite-existing
