@@ -496,31 +496,31 @@ ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /ho
 
 ## Install and update software
 echo "Updating VM and Stuff"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
 
 ## VM Install software
 echo "VM Install software"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
 
 ## Add Az Cli
 echo "Add Az Cli"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
 
 ## Install Kubectl
 echo "Install Kubectl"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
 
 ## Install JQ
 echo "Install JQ"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED sudo snap install jq
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install jq
 
 ## Add Kubectl completion
 echo "Add Kubectl completion"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
 
 ## Add Win password
 echo "Add Win password"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$SSH_VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
 
 ### Get Credentials
 echo "Getting Cluster Credentials"
@@ -533,4 +533,3 @@ echo "Process SSH into Node into SSH VM"
 AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
 AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
-
