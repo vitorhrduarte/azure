@@ -115,8 +115,8 @@ else
     --kubernetes-version $AKS_VERSION \
     --tags "env=userpool" \
     --mode User \
-    --node-count $AKS_USER_NODE_POOL_COUNT \
-    --node-vm-size $AKS_USER_NODE_POOL_SIZE \
+    --node-count $AKS_USER_NODE_COUNT \
+    --node-vm-size $AKS_USER_NODE_SIZE \
     --debug
   fi  
 fi
