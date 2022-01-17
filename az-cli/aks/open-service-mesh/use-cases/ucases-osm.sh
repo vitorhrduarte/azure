@@ -80,7 +80,7 @@ then
 		
         ## Remove SMI to access the APP
         echo "Remove SMI to access the APP"
-        kubeclt delete -f define-osm-app-level/allow-bookbuyer-smi.yaml
+        kubectl delete -f define-osm-app-level/allow-bookbuyer-smi.yaml
     
     else
         echo "Invalid Option"
