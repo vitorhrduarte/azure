@@ -1,0 +1,23 @@
+>>>>>>>>>>>
+To get Help
+>>>>>>>>>>>
+
+## Biotop
+python3 biotop -h
+
+## Biolatency
+python3 biolatency -h
+
+## Ext4Dist
+python3 ext4dist -h
+
+## Ext4Slower
+python3 ext4slower -h
+
+
+
+>>>>>>>>>>>>>>>
+Sample to run
+>>>>>>>>>>>>>>
+## Ext4Slower
+python3 ext4slower 10
