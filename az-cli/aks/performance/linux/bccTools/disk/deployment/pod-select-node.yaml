@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nd
+  name: nd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nd
+  template:
+    metadata:
+      labels:
+        app: nd
+    spec:
+      containers:
+      - image: typeoneg/netdebug:latest  
+        name: ng-app
+        command: ['sleep','infinity']
+      nodeSelector:
+        #agentpool: sysnpool  
+        kubernetes.io/hostname: aks-usernpool-73981302-vmss000002

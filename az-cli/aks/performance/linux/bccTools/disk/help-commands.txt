@@ -1,0 +1,34 @@
+#######################
+## Get All running pods
+#######################
+crictl pods -s Ready -o json | jq -r '(["podID","podNameSpace","podName","podState"] | (., map(length*"-"))), (.items[] | [ .id, .metadata.namespace, .metadata.name, .state ]) | @tsv' | column -t
+
+
+########################################
+## Get POD PID and show pod's "root PID"
+########################################
+read -p "Pod ID: " podpid && ps -auxf | grep $podpid | grep "/usr/bin/containerd-shim" | awk '{print $2}'
+
+
+##########################
+## Get Process PID details
+##########################
+read -p "PID: " gpid && ps -e --no-header -o pid,ppid | awk -vp=$gpid 'function r(s){print s;s=a[s];while(s){sub(",","",s);t=s;sub(",.*","",t);sub("[0-9]+","",s);r(t)}}{a[$2]=a[$2]","$1}END{r(p)}' | xargs ps --forest
+
+
+##################################
+## Get Process PID and show "Tree" 
+##################################
+read -p "PID: " gpid && echo $gpid | xargs -l bash -c 'pstree -sg $0'
+
+
+###############################
+## Get POD PID and show details
+###############################
+read -p "Pod PID: " podrpid && ps --pid $podrpid u | grep -Po "(?<=-id )[0-9,a-z]+" | xargs -I {} crictl pods -id {} -o json | jq -r '(["PodName","PodNameSpace","PodStatus"] | (., map(length*"-"))), (.items[] | [ .metadata.name, .metadata.namespace, .state ]) | @tsv' | column -t
+
+
+#############
+## FIO Sample
+#############
+fio --name=randwrite --ioengine=libaio --iodepth=1 --rw=randwrite --bs=4k --direct=0 --size=1024M --numjobs=20 --group_reporting --runtime=5560

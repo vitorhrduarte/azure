@@ -1,0 +1,5 @@
+## Add fio to samplepod
+apk update && apk add fio
+
+## Sample fio command
+fio --name=randwrite --ioengine=libaio --iodepth=1 --rw=randwrite --bs=4k --direct=0 --size=1024M --numjobs=20 --runtime=5240 --group_reporting
