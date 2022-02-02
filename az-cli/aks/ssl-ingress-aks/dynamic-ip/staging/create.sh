@@ -92,8 +92,12 @@ helm install cert-manager jetstack/cert-manager \
   --set installCRDs=true \
   --set nodeSelector."kubernetes\.io/os"=linux \
   --set image.tag=$CERT_MANAGER_TAG \
+  --set webhook.nodeSelector."kubernetes\.io/os"=linux \
   --set webhook.image.tag=$CERT_MANAGER_TAG \
-  --set cainjector.image.tag=$CERT_MANAGER_TAG
+  --set cainjector.nodeSelector."kubernetes\.io/os"=linux \
+  --set cainjector.image.tag=$CERT_MANAGER_TAG \
+  --set startupapicheck.nodeSelector."kubernetes\.io/os"=linux \
+  --set startupapicheck.image.tag=$CERT_MANAGER_TAG
 
 ## Deploy Cluster Issuer
 echo "Deploy Cluster Issuer"
@@ -181,7 +185,7 @@ metadata:
   name: hello-world-ingress-static
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /static/i\$2
+    nginx.ingress.kubernetes.io/rewrite-target: /static/\$2
     nginx.ingress.kubernetes.io/use-regex: \"true\"
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
