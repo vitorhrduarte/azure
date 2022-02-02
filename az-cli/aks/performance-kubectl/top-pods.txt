@@ -1,0 +1,1 @@
+while :; do  kubectl top pods --containers=true --all-namespaces --no-headers=true --use-protocol-buffers=true | ts '%Y-%m-%d %H:%M:%S' >> oms-perf.log ; sleep 10 ; done
