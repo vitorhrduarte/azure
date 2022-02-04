@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: app-ing-controller
+  namespace: ingress-basic
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /app00(/|$)(.*)
+        pathType: Prefix
+        backend:
+          serviceName: app00
+          servicePort: 80
+      - path: /app01(/|$)(.*)
+        pathType: Prefix
+        backend:
+          serviceName: app01
+          servicePort: 80
+      - path: /app02(/|$)(.*)
+        pathType: Prefix
+        backend:
+          serviceName: app02
+          servicePort: 80  
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          serviceName: app00
+          servicePort: 80
