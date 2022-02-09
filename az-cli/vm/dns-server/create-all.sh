@@ -80,16 +80,11 @@ az vm create \
 echo "Sleeping 45s - Allow time for Public IP"
 sleep 45
 
-
 ## Output Public IP of VM
 echo "Public IP of VM is:"
 VM_PUBLIC_IP=$(az network public-ip list \
   --resource-group $MAIN_VNET_RG \
-  --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
-
-VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
-echo $VM_PUBLIC_IP_PARSED
-
+  --output json | jq -r ".[] | select (.name==\"$VM_DNS_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv")
 
 ## Allow SSH from local ISP
 echo "Update VM NSG to allow SSH"
@@ -109,17 +104,17 @@ az network nsg rule create \
 
 ## Input Key Fingerprint
 echo "Input Key Fingerprint" 
-FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
 
 while [[ "$FINGER_PRINT_CHECK" = "0" ]]
 do
     echo "not good to go: $FINGER_PRINT_CHECK"
     echo "Sleeping for 5s..."
     sleep 5
-    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
 done
 
 echo "Goood to go with Input Key Fingerprint"
-ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP >> ~/.ssh/known_hosts
 
 

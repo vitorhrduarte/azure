@@ -1,6 +1,6 @@
 ## Running Options
-JUST_BIND="1"
-ALL="0"
+JUST_BIND="0"
+ALL="1"
 
 ## Core Networking
 MAIN_VNET_RG="rg-aks-dns"

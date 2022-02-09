@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  azure.server: | 
+    com:53 {
+        log
+        errors
+        cache 30
+        forward . 168.63.129.16
+    }
+  byodnspt.server: | 
+    pt:53 {
+        log
+        errors
+        cache 15
+        forward . 10.0.10.4
+    }
+  byodnsio.server: | 
+    io:53 {
+        log 
+        errors
+        cache 15
+        forward . 10.0.10.4
+    }   
+

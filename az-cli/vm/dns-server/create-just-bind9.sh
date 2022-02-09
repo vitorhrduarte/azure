@@ -6,10 +6,7 @@ set -e
 echo "Public IP of VM is:"
 VM_PUBLIC_IP=$(az network public-ip list \
   --resource-group $MAIN_VNET_RG \
-  --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
-
-VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
-echo $VM_PUBLIC_IP_PARSED
+  --output json | jq -r ".[] | select (.name==\"$VM_DNS_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv")
 
 BIND_CONFIG_FILE_NAME="named.conf.options"
 
@@ -71,42 +68,42 @@ options {
 
 ## Update DNS Server VM
 echo "Update DNS Server VM and Install Bind9"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt update && sudo apt upgrade -y
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update && sudo apt upgrade -y
 
 ## Install Bind9
 echo "Install Bind9"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install vim bind9 -y
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt install vim bind9 -y
 
 ## Setup Bind9
 echo "Setup Bind9"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo cp /etc/bind/named.conf.options /etc/bind/named.conf.options.backup
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo cp /etc/bind/named.conf.options /etc/bind/named.conf.options.backup
 
 ## Create Bind9 Logs folder
 echo "Create Bind9 Logs folder"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo mkdir /var/log/named 
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo mkdir /var/log/named 
 
 ## Setup good permission in Bind9 Logs folder - change owner
 echo "Setup good permission in Bind9 Logs folder - change owner"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo chown -R bind:bind /var/log/named 
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo chown -R bind:bind /var/log/named 
 
 ## Setup good permission in Bind9 Logs folder - change permissions
 echo "Setup good permission in Bind9 Logs folder - change permissions"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo chmod -R 775 /var/log/named
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo chmod -R 775 /var/log/named
 
 ## Copy Bind Config file to DNS Server
 echo "Copy Bind Config File to Remote DNS server"
-scp -i $SSH_PRIV_KEY $BIND_CONFIG_FILE_NAME $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/tmp
+scp -i $SSH_PRIV_KEY $BIND_CONFIG_FILE_NAME $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/tmp
 
 ## sudo cp options file to /etc/bind/
 echo "Copy the Bind File to /etc/bind"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo "cp /tmp/$BIND_CONFIG_FILE_NAME /etc/bind"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo "cp /tmp/$BIND_CONFIG_FILE_NAME /etc/bind"
 
 ## sudo systemctl stop bind9
 echo "Stop Bind9"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo systemctl stop bind9
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo systemctl stop bind9
 
 ## sudo systemctl start bind9
 echo "Start Bind9"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo systemctl start bind9
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo systemctl start bind9
 
 
