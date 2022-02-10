@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: windows-default-configmap
+  namespace: default
+data:
+  Default.aspx: |
+    <!DOCTYPE html>
+    <html>
+    <body>
+        <title>IIS WebServer</title>
+        <title>This page was last refreshed on <%= Now() %>.</title>
+    </body> 
+    </html>
