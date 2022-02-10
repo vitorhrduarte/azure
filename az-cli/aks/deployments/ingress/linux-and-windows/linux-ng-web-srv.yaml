@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: linux-ng-web-srv
+  name: linux-ng-web-srv
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: linux-ng-web-srv
+  template:
+    metadata:
+      labels:
+        app: linux-ng-web-srv
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - name: nginx-index-file
+          mountPath: /usr/share/nginx/html/
+        - name: nginx-core-file
+          mountPath: /etc/nginx/conf.d/
+      nodeSelector:
+        kubernetes.io/os: linux
+        #agentpool: usrnp01
+      volumes:
+      - name: nginx-index-file
+        configMap:
+         name: index-html-configmap
+      - name: nginx-core-file
+        configMap:
+          name: index-core-configmap
