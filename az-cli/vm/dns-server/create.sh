@@ -11,7 +11,7 @@ if [[ $JUST_BIND -eq "0" && $ALL -eq "1" ]]; then
     bash create-just-bind9.sh
 fi
 
-if [[ $JUST_BIND -eq "1" &  $ALL -eq "0" ]]; then
+if [[ $JUST_BIND -eq "1" && $ALL -eq "0" ]]; then
     echo "Setup Bind9"
     bash create-just-bind9.sh
 fi
