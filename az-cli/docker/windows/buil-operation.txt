@@ -1,0 +1,1 @@
+docker build -f build-nginx -t winng:latest .
