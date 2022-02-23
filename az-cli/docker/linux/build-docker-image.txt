@@ -1,0 +1,1 @@
+docker image build -t typeoneg/helperpod:v1 -f dockerFile-image .
