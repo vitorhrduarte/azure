@@ -20,7 +20,7 @@ az network vnet create \
     --subnet-prefix $AKS_SNET_CIDR \
     --debug
 
-## get subnet info
+## Get Subnet Info
 echo "Getting Subnet ID"
 AKS_SNET_ID=$(az network vnet subnet show \
   --resource-group $VNET_RG \
@@ -28,7 +28,7 @@ AKS_SNET_ID=$(az network vnet subnet show \
   --name $AKS_SNET \
   --query id -o tsv)
 
-### create aks cluster
+## Create AKS Cluster
 echo "Creating AKS Cluster RG"
 az group create \
   --name $RG_NAME \
@@ -372,164 +372,169 @@ else
   fi
 fi
 
-### Create RG for VM
-### Skip if RG already been Created
-echo "Create RG if required"
-if [ $(az group list -o table | awk '{print $1}' | grep "^$RG_NAME" | wc -l) -eq 1 ]; then echo "RG Already there! Continue"; else  az group create --location $RG_LOCATION --name $RG_NAME; fi
 
-### VM SSS Client subnet Creation
-echo "Create VM Subnet"
-az network vnet subnet create \
-  -g $RG_NAME \
-  --vnet-name $VNET_NAME \
-  -n $VM_SUBNET_NAME \
-  --address-prefixes $VM_SNET_CIDR \
+if [[ "$HAS_JUMP_SERVER" == "1" ]] 
+then
+
+  ## VM Jump Client subnet Creation
+  echo "Create VM Subnet"
+  az network vnet subnet create \
+    --resource-group $RG_NAME \
+    --vnet-name $VNET_NAME \
+    --name $VM_SUBNET_NAME \
+    --address-prefixes $VM_SNET_CIDR \
+    --debug
+  
+  
+  ## VM NSG Create
+  echo "Create NSG"
+  az network nsg create \
+    --resource-group $RG_NAME \
+    --name $VM_NSG_NAME \
+    --debug
+  
+  ## Public IP Create
+  echo "Create Public IP"
+  az network public-ip create \
+    --name $VM_PUBLIC_IP_NAME \
+    --resource-group $RG_NAME \
+    --debug
+  
+  
+  ## VM Nic Create
+  echo "Create VM Nic"
+  az network nic create \
+    -g $RG_NAME \
+    --vnet-name $VNET_NAME \
+    --subnet $VNET_SUBNET_NAME \
+    -n $VM_NIC_NAME \
+    --network-security-group $VM_NSG_NAME \
+    --debug 
+  
+  ## Attache Public IP to VM NIC
+  echo "Attach Public IP to VM NIC"
+  az network nic ip-config update \
+    --name $VM_DEFAULT_IP_CONFIG \
+    --nic-name $VM_NIC_NAME \
+    --resource-group $RG_NAME \
+    --public-ip-address $VM_PUBLIC_IP_NAME \
+    --debug
+  
+  ## Update NSG in VM Subnet
+  echo "Update NSG in VM Subnet"
+  az network vnet subnet update \
+    --resource-group $RG_NAME \
+    --name $VNET_SUBNET_NAME \
+    --vnet-name $VNET_NAME \
+    --network-security-group $VM_NSG_NAME \
   --debug
 
-
-### VM NSG Create
-echo "Create NSG"
-az network nsg create \
-  -g $RG_NAME \
-  -n $VM_NSG_NAME \
-  --debug
-
-## Public IP Create
-echo "Create Public IP"
-az network public-ip create --name $VM_PUBLIC_IP_NAME --resource-group $RG_NAME --debug
-
-
-### VM Nic Create
-echo "Create VM Nic"
-az network nic create \
-  -g $RG_NAME \
-  --vnet-name $VNET_NAME \
-  --subnet $VNET_SUBNET_NAME \
-  -n $VM_NIC_NAME \
-  --network-security-group $VM_NSG_NAME \
-  --debug 
-
-## Attache Public IP to VM NIC
-echo "Attach Public IP to VM NIC"
-az network nic ip-config update \
-  --name $VM_DEFAULT_IP_CONFIG \
-  --nic-name $VM_NIC_NAME \
-  --resource-group $RG_NAME \
-  --public-ip-address $VM_PUBLIC_IP_NAME \
-  --debug
-
-## Update NSG in VM Subnet
-echo "Update NSG in VM Subnet"
-az network vnet subnet update \
-  --resource-group $RG_NAME \
-  --name $VNET_SUBNET_NAME \
-  --vnet-name $VNET_NAME \
-  --network-security-group $VM_NSG_NAME \
-  --debug
-
-### Create VM
-echo "Create VM"
-az vm create \
-  --resource-group $RG_NAME \
-  --authentication-type $AUTH_TYPE \
-  --name $VM_NAME \
-  --computer-name $VM_INTERNAL_NAME \
-  --image $IMAGE \
-  --size $VM_SIZE \
-  --admin-username $GENERIC_ADMIN_USERNAME \
-  --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --storage-sku $VM_STORAGE_SKU \
-  --os-disk-size-gb $VM_OS_DISK_SIZE \
-  --os-disk-name $VM_OS_DISK_NAME \
-  --nics $VM_NIC_NAME \
-  --tags $TAGS \
-  --debug
-
-echo "Sleeping 45s - Allow time for Public IP"
-sleep 45
-
-### Output Public IP of VM
-echo "Public IP of VM is:"
-#VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress, name:[].name, tags:[].tags.purpose}" -o json | jq -r ".ip, .name, .tags | @csv")
-VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
-VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
-echo $VM_PUBLIC_IP_PARSED
-
-### Allow SSH from my Home
-echo "Update VM NSG to allow SSH"
-az network nsg rule create \
-  --nsg-name $VM_NSG_NAME \
-  --resource-group $RG_NAME \
-  --name ssh_allow \
-  --priority 100 \
-  --source-address-prefixes $MY_HOME_PUBLIC_IP \
-  --source-port-ranges '*' \
-  --destination-address-prefixes $VM_PRIV_IP \
-  --destination-port-ranges 22 \
-  --access Allow \
-  --protocol Tcp \
-  --description "Allow from MY ISP IP"
-
-### Input Key Fingerprint
-echo "Input Key Fingerprint" 
-
-FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
-
-while [[ "$FINGER_PRINT_CHECK" = "0" ]]
-do
+  ## Create VM
+  echo "Create VM"
+  az vm create \
+    --resource-group $RG_NAME \
+    --authentication-type $AUTH_TYPE \
+    --name $VM_NAME \
+    --computer-name $VM_INTERNAL_NAME \
+    --image $IMAGE \
+    --size $VM_SIZE \
+    --admin-username $GENERIC_ADMIN_USERNAME \
+    --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
+    --storage-sku $VM_STORAGE_SKU \
+    --os-disk-size-gb $VM_OS_DISK_SIZE \
+    --os-disk-name $VM_OS_DISK_NAME \
+    --nics $VM_NIC_NAME \
+    --tags $TAGS \
+    --debug
+  
+  echo "Sleeping 45s - Allow time for Public IP"
+  sleep 45
+  
+  ## Output Public IP of VM
+  echo "Public IP of VM is:"
+  #VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress, name:[].name, tags:[].tags.purpose}" -o json | jq -r ".ip, .name, .tags | @csv")
+  VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
+  VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
+  echo $VM_PUBLIC_IP_PARSED
+  
+  ## Allow SSH from my Home
+  echo "Update VM NSG to allow SSH"
+  az network nsg rule create \
+    --nsg-name $VM_NSG_NAME \
+    --resource-group $RG_NAME \
+    --name ssh_allow \
+    --priority 100 \
+    --source-address-prefixes $MY_HOME_PUBLIC_IP \
+    --source-port-ranges '*' \
+    --destination-address-prefixes $VM_PRIV_IP \
+    --destination-port-ranges 22 \
+    --access Allow \
+    --protocol Tcp \
+    --description "Allow from MY ISP IP"
+  
+  ## Input Key Fingerprint
+  echo "Input Key Fingerprint" 
+  
+  FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+  
+  while [[ "$FINGER_PRINT_CHECK" = "0" ]]
+  do
     echo "not good to go: $FINGER_PRINT_CHECK"
     echo "Sleeping for 5s..."
     sleep 5
     FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
-done
+  done
+  
+  echo "Go to go with Input Key Fingerprint"
+  ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+  
+  ## Copy to VM AKS SSH Priv Key
+  echo "Copy to VM priv Key of AKS Cluster"
+  scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+  
+  ## Set Correct Permissions on Priv Key
+  echo "Set good Permissions on AKS Priv Key"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
+  
+  ## Install and update software
+  echo "Updating VM and Stuff"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
+  
+  ## VM Install software
+  echo "VM Install software"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
 
-echo "Go to go with Input Key Fingerprint"
-ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+  ## Add Az Cli
+  echo "Add Az Cli"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+  
+  ## Install Kubectl
+  echo "Install Kubectl"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
+  
+  ## Install JQ
+  echo "Install JQ"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install jq
+  
+  ## Add Kubectl completion
+  echo "Add Kubectl completion"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
 
-### Copy to VM AKS SSH Priv Key
-echo "Copy to VM priv Key of AKS Cluster"
-scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+  ## Add Win password
+  echo "Add Win password"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
+  
+  ## Create the SSH into Node Helper file
+  echo "Process SSH into Node into SSH VM"
+  AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
+  AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
+  
+fi
 
-### Set Correct Permissions on Priv Key
-echo "Set good Permissions on AKS Priv Key"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
-
-## Install and update software
-echo "Updating VM and Stuff"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
-
-## VM Install software
-echo "VM Install software"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
-
-## Add Az Cli
-echo "Add Az Cli"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
-
-## Install Kubectl
-echo "Install Kubectl"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
-
-## Install JQ
-echo "Install JQ"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install jq
-
-## Add Kubectl completion
-echo "Add Kubectl completion"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
-
-## Add Win password
-echo "Add Win password"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
-
-### Get Credentials
+## Get Credentials
 echo "Getting Cluster Credentials"
 az aks get-credentials --resource-group $RG_NAME --name $CLUSTER_NAME --overwrite-existing
 echo "Public IP of the VM"
 echo $VM_PUBLIC_IP_PARSED
 
-### Create the SSH into Node Helper file
-echo "Process SSH into Node into SSH VM"
-AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
-AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
