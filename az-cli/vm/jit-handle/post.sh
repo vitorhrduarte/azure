@@ -40,7 +40,7 @@ printf "
                 ]
       }
     ],
-        "justification": "Access VM Today"
+        "justification": \"Access VM Today\"
 }
 " >> $AZURE_VM_JIT_INITIATE_NAME
 
