@@ -1,0 +1,19 @@
+
+{
+  kind: "Basic",
+  properties: {
+    virtualMachines: [
+      {
+        id: "/subscriptions/045b58b5-83cd-493e-a91e-522cce710e8e/resourceGroups/RG-VM-JPSRV/providers/Microsoft.Compute/virtualMachines/ljs",
+        ports: [
+          {
+            number: "22",
+            protocol: "*",
+            allowedSourceAddressPrefix: "148.63.79.29",
+            maxRequestAccessDuration: "P1D"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+	"virtualMachines": [
+    	{
+        	"id": "/subscriptions/045b58b5-83cd-493e-a91e-522cce710e8e/resourceGroups/rg-vm-jpsrv/providers/Microsoft.Compute/virtualMachines/ljs",
+        	"ports": [
+          		{
+            		"number": 22,
+            		"protocol": "*",
+            		"allowedSourceAddressPrefix": "192.168.0.1",
+            		"duration": "P1D"
+          		}
+        	]
+      }
+    ],
+	"justification": "Access VM Today"
+}
