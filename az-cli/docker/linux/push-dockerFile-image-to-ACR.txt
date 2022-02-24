@@ -1,0 +1,1 @@
+docker push <<acr_name>>.azurecr.io/<<image>>:<<tag>>
