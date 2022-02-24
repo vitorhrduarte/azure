@@ -1,0 +1,14 @@
+FROM alpine:latest
+LABEL vhrd.helperpod.alpine.version=latest
+RUN apk update \
+&& apk upgrade \
+&& apk add netcat-openbsd \
+&& apk add nmap \
+&& apk add curl \
+&& apk add iputils \
+&& apk add tcpdump \
+&& apk add nginx \
+&& apk add openssh \
+&& apk add hping3 --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+&& apk add bind-tools \
+&& curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
