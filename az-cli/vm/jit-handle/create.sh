@@ -111,9 +111,9 @@ funcValidatePort () {
 
   if [ "$JIT_OPERATION_VM_PORT" -eq "$JIT_OPERATION_VM_PORT" ] 2>/dev/null
   then
-      echo "$JIT_OPERATION_VM_PORT is an integer !!"
+      echo "$JIT_OPERATION_VM_PORT is an integer... good to go...."
   else
-      echo "ERROR: first parameter must be an integer."
+      echo "Value giving $JIT_OPERATION_VM_PORT for Port is invalid..."
       echo "Exiting"
       exit 1
   fi
@@ -359,8 +359,6 @@ then
    echo ""
    echo "Delete JIT"
 
-   funcValidatePort
-
    funcGetVmInformation
 
    funcGetAzureToken
@@ -385,7 +383,7 @@ then
 
     echo ""
     echo "GEt JIT Details and Status"
-     
+  
     funcGetVmInformation
  
     funcGetAzureToken
