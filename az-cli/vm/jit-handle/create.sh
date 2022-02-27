@@ -8,8 +8,6 @@
 ## Jit Details
 AZURE_VM_JIT_CREATION_NAME="jit-vm.json"
 AZURE_VM_JIT_INITIATE_NAME="jit-vm-post.json"
-AZURE_VM_WINDOWS_PORT="3389"
-AZURE_VM_LINUX_PORT="22"
 AZURE_VM_JIT_DURATION="P1D" # 1 DAY, for hours use: PT6H
 
 ## Local ISP Details
@@ -17,14 +15,6 @@ MY_ISP_IP=$(curl -s https://ifconfig.io)
 
 ## Az VM Jit Policy Name
 AZ_VM_JIT_POL_NAME="default"
-
-
-
-
-
-
-
-
 
 
 
@@ -38,7 +28,7 @@ cat << EOF
 Usage: 
 
 bash create.sh --help/-h  [for help]
-bash create.sh -o/--operation <status create delete init> -m/--machine <vm-name>
+bash create.sh -o/--operation <status create delete init> -m/--machine <vm-name> -g/--group <vm-resourceGroup> -p/--port <port-number>
 
 Install Pre-requisites jq and dialog
 
@@ -49,12 +39,14 @@ Install Pre-requisites jq and dialog
 
 -m, -machine,       --machine               Apply previous operation to All or One Cluster          
 
+-p, -port           --port                  Port to be opened 
+
 -g, -rg,            --rg                    VM Resource Group  
 
 EOF
 }
 
-options=$(getopt -l "help::,operation:,machine:,rg:" -o "h::o:m:g:" -a -- "$@")
+options=$(getopt -l "help::,operation:,machine:,rg:,port:" -o "h::o:m:g:p:" -a -- "$@")
 
 eval set -- "$options"
 
@@ -76,6 +68,10 @@ case $1 in
 -g|--rg)
     shift
     JIT_OPERATION_VM_RG=$1
+    ;;  
+-p|--port)
+    shift
+    JIT_OPERATION_VM_PORT=$1
     ;;  
 --)
     shift
@@ -107,6 +103,21 @@ funcCheckArguments () {
     exit 1
   fi
   
+}
+
+
+
+funcValidatePort () {
+
+  if [ "$JIT_OPERATION_VM_PORT" -eq "$JIT_OPERATION_VM_PORT" ] 2>/dev/null
+  then
+      echo "$JIT_OPERATION_VM_PORT is an integer... good to go...."
+  else
+      echo "Value giving $JIT_OPERATION_VM_PORT for Port is invalid..."
+      echo "Exiting"
+      exit 1
+  fi
+
 }
 
 
@@ -213,7 +224,7 @@ funcCreateVMJit () {
           "id": \"$AZ_VM_ID\",
           "ports": [
             {
-              "number": \"$AZURE_VM_LINUX_PORT\",
+              "number": \"$JIT_OPERATION_VM_PORT\",
               "protocol": \"*\",
               "allowedSourceAddressPrefix": \"$MY_ISP_IP\",
               "maxRequestAccessDuration": \"$AZURE_VM_JIT_DURATION\"
@@ -297,7 +308,7 @@ funcInitiateVmJit () {
                 "id": \"$AZ_VM_ID\",
                 "ports": [
                         {
-                        "number": \"$AZURE_VM_LINUX_PORT\",
+                        "number": \"$JIT_OPERATION_VM_PORT\",
                         "protocol": \"*\",
                         "allowedSourceAddressPrefix": \"$MY_ISP_IP\",
                         "duration": \"$AZURE_VM_JIT_DURATION\"
@@ -319,54 +330,71 @@ funcInitiateVmJit () {
 
 
 
+#######################################
+## Core ###############################
+#######################################
+
+
+
 ## Run ALl the time to validate Arguments
 echo "Validating arguments"
 funcCheckArguments 
 
-
-
-
+## Apply Arguments logic
 if [[ "$JIT_OPERATION_TYPE" == "init" ]]
 then
+   echo ""
+   echo "Initialize JIT..."
 
-    funcGetVmInformation
+   funcValidatePort
 
-    funcGetAzureToken
+   funcGetVmInformation
 
-    funcInitiateVmJit
-fi
+   funcGetAzureToken
 
+   funcInitiateVmJit
 
-
-if [[ "$JIT_OPERATION_TYPE" == "delete" ]]
+elif [[ "$JIT_OPERATION_TYPE" == "delete" ]]
 then
+   echo ""
+   echo "Delete JIT"
 
-    funcGetVmInformation
+   funcGetVmInformation
 
-    funcGetAzureToken
+   funcGetAzureToken
 
-    funcDeleteVmJit
-fi
+   funcDeleteVmJit
 
-
-if [[ "$JIT_OPERATION_TYPE" == "create" ]]
+elif [[ "$JIT_OPERATION_TYPE" == "create" ]]
 then
+    echo ""
+    echo "Create JIT"
+
+    funcValidatePort
 
     funcGetVmInformation
 
     funcGetAzureToken
 
     funcCreateVMJit    
-fi
 
-
-if [[ "$JIT_OPERATION_TYPE" == "status" ]]
+elif [[ "$JIT_OPERATION_TYPE" == "status" ]]
 then
 
-   funcGetVmInformation
+    echo ""
+    echo "GEt JIT Details and Status"
+  
+    funcGetVmInformation
+ 
+    funcGetAzureToken
 
-   funcGetAzureToken
+    funcGetJit
 
-   funcGetJit
+else
+
+    echo "$JIT_OPERATION_TYPE is not a valid operation..."
+    echo "Exiting"
+    exit 1
+
 fi
 
