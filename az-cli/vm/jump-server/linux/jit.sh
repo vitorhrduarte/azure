@@ -27,8 +27,8 @@ showHelp() {
 cat << EOF  
 Usage: 
 
-bash create.sh --help/-h  [for help]
-bash create.sh -o/--operation <status create delete init> -m/--machine <vm-name> -g/--group <vm-resourceGroup> -p/--port <port-number>
+bash jit.sh --help/-h  [for help]
+bash jit.sh -o/--operation <status create delete init> -m/--machine <vm-name> -g/--group <vm-resourceGroup> -p/--port <port-number>
 
 Install Pre-requisites jq and dialog
 

@@ -77,6 +77,30 @@ az vm create \
   --debug
 
 
+## Process if NSG is required
+if [[ "$JS_HAS_NSG" == "1" ]]
+then
+
+  ## Create NSG
+  echo "Create NSG"
+  az network nsg create \
+    --resource-group $JS_MAIN_VNET_RG\
+    --name $JS_NSG_NAME \
+    --debug
+
+
+  ## Update NSG in VM Subnet
+  echo "Update NSG in VM Subnet"
+  az network vnet subnet update \
+    --resource-group $JS_MAIN_VNET_RG \
+    --name $JS_SUBNET_NAME \
+    --vnet-name $JS_MAIN_VNET_NAME \
+    --network-security-group $JS_NSG_NAME \
+    --debug
+
+fi
+
+
 ## Waiting for PIP
 VM_PUBLIC_IP=$(az network public-ip list \
   --resource-group $JS_MAIN_VNET_RG \
@@ -97,14 +121,43 @@ VM_PUBLIC_IP=$(az network public-ip list \
   --output json | jq -r ".[] | select (.name==\"$JS_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv")
 
 
+## Process if NSG is required
+if [[ "$JS_HAS_NSG" == "1" ]]
+then
+  ## Allow SSH from my Home
+  echo "Update VM NSG to allow SSH"
+  az network nsg rule create \
+    --nsg-name $JS_NSG_NAME \
+    --resource-group $JS_MAIN_VNET_RG \
+    --name ssh_allow \
+    --priority 100 \
+    --source-address-prefixes $JS_MY_ISP_IP \
+    --source-port-ranges '*' \
+    --destination-address-prefixes $JS_PRIV_IP \
+    --destination-port-ranges 22 \
+    --access Allow \
+    --protocol Tcp \
+    --description "Allow from MY ISP IP"
+
+fi
+
+
 ## Jit Handling for VM
 echo "Jit Handling for VM"
 if [[ "$JS_USE_JIT" == "1" ]]
-then 
+then
+   
+    ## Azure VM works with Upper case RG
+    JS_RG_UPPER=${JS_MAIN_VNET_RG^^}
+
     echo "Create JIT"
-    bash jit.sh -o create -m $JS_INTERNAL_NAME -g $JS_MAIN_VNET_RG  -p 22
+    bash ./jit.sh -o create -m $JS_INTERNAL_NAME -g $JS_RG_UPPER -p 22
+    echo ""
+    echo "Sleeping for 15s"
+    sleep 15
+    echo ""
     echo "Initiate JIT"
-    bash jit.sh -o init -m $JS_INTERNAL_NAME -g $JS_MAIN_VNET_RG  -p 22
+    bash ./jit.sh -o init -m $JS_INTERNAL_NAME -g $JS_RG_UPPER -p 22
 fi
 
 
