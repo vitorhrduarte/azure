@@ -21,7 +21,7 @@ az monitor log-analytics workspace create \
 ## Get LAWSpace details
 echo "Getting LAWSpace Details"
 LAWS_ID=$(az monitor log-analytics workspace list \
-  --output json | jq -r ".[] | [ .customerId, .name, .resourceGroup ] | @csv" | grep -i $LOG_WKS_NAME | awk -F "," '{print $1}' | sed  's/"//g')
+  --output json | jq -r ".[] |  select ( .name == \"$LOG_WKS_NAME\"  ) | [ .customerId ] | @csv")
 
 LAWS_KEY=$(az monitor log-analytics workspace get-shared-keys \
   --resource-group $LOG_RG_NAME \
