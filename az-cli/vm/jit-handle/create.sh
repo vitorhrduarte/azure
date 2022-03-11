@@ -13,10 +13,6 @@ AZURE_VM_JIT_DURATION="P1D" # 1 DAY, for hours use: PT6H
 ## Local ISP Details
 MY_ISP_IP=$(curl -s https://ifconfig.io)
 
-## Az VM Jit Policy Name
-AZ_VM_JIT_POL_NAME="default"
-
-
 
 #############
 ## Functions#
@@ -28,7 +24,7 @@ cat << EOF
 Usage: 
 
 bash create.sh --help/-h  [for help]
-bash create.sh -o/--operation <status create delete init> -m/--machine <vm-name> -g/--group <vm-resourceGroup> -p/--port <port-number>
+bash create.sh -o/--operation <status create delete init> -m/--machine <vm-name> -g/--group <vm-resourceGroup> -p/--port <port-number> -j/--jit <jit-policy-name>
 
 Install Pre-requisites jq and dialog
 
@@ -43,10 +39,12 @@ Install Pre-requisites jq and dialog
 
 -g, -rg,            --rg                    VM Resource Group  
 
+-j, -jit,           --jit                   Jit Policy Name
+
 EOF
 }
 
-options=$(getopt -l "help::,operation:,machine:,rg:,port:" -o "h::o:m:g:p:" -a -- "$@")
+options=$(getopt -l "help::,operation:,machine:,rg:,port:,jit:" -o "h::o:m:g:p:j:" -a -- "$@")
 
 eval set -- "$options"
 
@@ -73,6 +71,10 @@ case $1 in
     shift
     JIT_OPERATION_VM_PORT=$1
     ;;  
+-j|--jit)
+    shift
+    JIT_POL_NAME=$1
+    ;;      
 --)
     shift
     break
@@ -207,7 +209,7 @@ funcCreateVMJit () {
 
   ## Define VM Endpoint for Jit
   echo "Define VM Endpoint for Jit"
-  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$AZ_VM_JIT_POL_NAME?api-version=2020-01-01"
+  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$JIT_POL_NAME?api-version=2020-01-01"
   
   ## Removing any existin Jit Json file
   echo "Removing any existin Jit Json file"
@@ -262,7 +264,7 @@ funcDeleteVmJit () {
   AZ_SUB_ID=$(echo $AZ_VM_ID | cut -d \/ -f 3)
 
 
-  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$AZ_VM_JIT_POL_NAME/?api-version=2020-01-01"
+  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$JIT_POL_NAME/?api-version=2020-01-01"
 
   ## Execute Curl
   echo "Executing Curl Operation"
@@ -292,7 +294,7 @@ funcInitiateVmJit () {
 
   ## Define VM Endpoint for Jit
   echo "Define VM Endpoint for Jit"
-  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$AZ_VM_JIT_POL_NAME/initiate?api-version=2020-01-01"
+  AZ_VM_ENDPOINT="https://management.azure.com/subscriptions/$AZ_SUB_ID/resourceGroups/$AZ_VM_RG/providers/Microsoft.Security/locations/$AZURE_VM_LOCATION/jitNetworkAccessPolicies/$JIT_POL_NAME/initiate?api-version=2020-01-01"
 
 
   ## Removing any existin Jit Json file
