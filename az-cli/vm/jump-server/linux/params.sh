@@ -11,7 +11,7 @@ JS_MAIN_VNET_CIDR="10.0.0.0/24"
 JS_SUBNET_CIDR="10.0.0.0/27"
 JS_SUBNET_NAME="snet-vm-jpsrv"
 JS_PRIV_IP="10.0.0.4/32"
-JS_MY_ISP_IP=$(curl ifconfig.io)
+JS_MY_ISP_IP=$(curl -4 ifconfig.io)
 
 ## Public IP Name
 JS_PUBLIC_IP_NAME="linpip" 
