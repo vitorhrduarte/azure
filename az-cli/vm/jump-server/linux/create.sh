@@ -200,8 +200,12 @@ then
   
   ## Update Server VM
   echo "Update Server VM"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update && sudo apt upgrade -y
-  
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update
+ 
+  ## Upgrade Server VM
+  echo "Upgrade Server VM"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt upgrade -y
+
   
   ## VM Install software
   echo "VM Install software"
