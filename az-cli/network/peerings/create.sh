@@ -7,7 +7,7 @@ funcShowPeerings () {
   az network vnet peering list \
     --resource-group $1 \
     --vnet-name $2 \
-    --output json | jq -r ".[] | [ .name, .peeringState, .resourceGroup, .remoteVirtualNetworkAddressSpace.addressPrefixes[], .peeringSyncLevel , .remoteVirtualNetwork.resourceGroup] | @tsv" | column -t
+    --output json | jq -r '(["PeeringName","PeeringState","RG","AddPrefix","PeeringSyncLevel","RemoteVnetRG"] | (., map(length*"-"))),(.[] | [ .name, .peeringState, .resourceGroup, .remoteVirtualNetworkAddressSpace.addressPrefixes[], .peeringSyncLevel , .remoteVirtualNetwork.resourceGroup]) | @tsv' | column -t
 }
 
 
@@ -78,7 +78,7 @@ cat << EOF
 Usage: 
 
 bash create.sh --help/-h  [for help]
-bash create.sh -o/--operation <peer unpeer status>
+bash create.sh -o/--operation <peer unpeer status> -g/--group <destination-rg-name> -n/--name <destination-vnet-name>
 
 Install Pre-requisites jq and dialog
 
@@ -87,10 +87,14 @@ Install Pre-requisites jq and dialog
 -o, -operation,     --operation             Set operation type for the VNET Peering
                                             peer or unpeer Or status
 
+-g, -group,         --group                 Destination Vnet Group
+
+-n, -name,          --name                  Destination Vnet Name
+
 EOF
 }
 
-options=$(getopt -l "help::,operation:" -o "h::o:" -a -- "$@")
+options=$(getopt -l "help::,operation:,group:,name:" -o "h::o:g:n:" -a -- "$@")
 
 eval set -- "$options"
 
@@ -105,6 +109,14 @@ case $1 in
     shift
     VNET_OPERATION_TYPE=$1
     ;;  
+-g|--group)
+    shift
+    DEST_VNET_RG=$1
+    ;;  
+-n|--name)
+    shift
+    DEST_VNET_NAME=$1
+    ;;  
 --)
     shift
     break
@@ -118,7 +130,11 @@ done
 
 if [[ "$VNET_OPERATION_TYPE" == "status"  ]]
 then
+   
+   echo "Origin Details..."
    funcShowPeerings $JS_VNET_RG $JS_VNET_NAME
+   echo ""   
+   echo "Destination Details..."
    funcShowPeerings $DEST_VNET_RG $DEST_VNET_NAME
 elif [[ "$VNET_OPERATION_TYPE" == "peer"  ]]
 then
