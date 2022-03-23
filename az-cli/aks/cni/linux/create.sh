@@ -6,52 +6,46 @@ set -e
 ## Create Resource Group for Cluster VNet
 echo "Create RG for Cluster Vnet"
 az group create \
-  --name $VNET_RG \
-  --location $LOCATION \
+  --name $AKS_RG_NAME \
+  --location $AKS_RG_LOCATION \
+  --tags env=$AKS_CLUSTER_NAME \
   --debug
 
 ## Create  VNet and Subnet
 echo "Create Vnet and Subnet for AKS Cluster"
 az network vnet create \
-    -g $VNET_RG \
-    -n $AKS_VNET \
-    --address-prefix $AKS_VNET_CIDR \
-    --subnet-name $AKS_SNET \
-    --subnet-prefix $AKS_SNET_CIDR \
-    --debug
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_VNET \
+  --address-prefix $AKS_VNET_CIDR \
+  --subnet-name $AKS_SNET \
+  --subnet-prefix $AKS_SNET_CIDR \
+  --debug
 
 ## Get Subnet Info
 echo "Getting Subnet ID"
 AKS_SNET_ID=$(az network vnet subnet show \
-  --resource-group $VNET_RG \
+  --resource-group $AKS_RG_NAME \
   --vnet-name $AKS_VNET \
   --name $AKS_SNET \
   --query id -o tsv)
 
 ## Create AKS Cluster
-echo "Creating AKS Cluster RG"
-az group create \
-  --name $RG_NAME \
-  --location $LOCATION \
-  --tags env=lab \
-  --debug
-
 echo "Creating AKS Cluster"
-if [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 1 ]]; then
+if [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 1 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor Enabled, AutoScaler, Managed Idenity and Network Policy = Azure"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -64,25 +58,25 @@ if [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTIT
   --min-count 1 \
   --max-count 3 \
   --enable-managed-identity \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug 
-elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor Enabled, AutoScaler, Managed Idenity"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -94,25 +88,25 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --min-count 1 \
   --max-count 3 \
   --enable-managed-identity \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor Enabled, Managed Idenity"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -121,27 +115,27 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
   --enable-managed-identity \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug  
-elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor Enabled, AutoScaler"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --service-principal $SP \
   --client-secret $SPPASS \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -152,26 +146,26 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --enable-cluster-autoscaler \
   --min-count 1 \
   --max-count 3 \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --service-principal $SP \
   --client-secret $SPPASS \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -179,24 +173,24 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Managed Identity"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -204,25 +198,25 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-managed-identity \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 1 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 1 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Managed Identityi and Network Policy = Azure" 
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -231,27 +225,27 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-managed-identity \
   --network-policy $AKS_NET_NPOLICY \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with Monitor" 
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --service-principal $SP \
   --client-secret $SPPASS \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -259,26 +253,26 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --enable-addons monitoring \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 0 && $HAS_NETWORK_POLICY -eq 0 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with AutoScaler"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --service-principal $SP \
   --client-secret $SPPASS \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -288,25 +282,25 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --enable-cluster-autoscaler \
   --min-count 1 \
   --max-count 3 \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug
-elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTITY -eq 1 && $HAS_NETWORK_POLICY -eq 1 ]]; then
+elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 1 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   echo "Creating AKS with AutoScaler MSI and Network Policy"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -318,8 +312,8 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --network-policy $AKS_NET_NPOLICY \
   --min-count 1 \
   --max-count 3 \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --yes \
   --debug
 else
@@ -327,146 +321,147 @@ else
   echo "Creating AKS without Monitor"
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
   az aks create \
-  --resource-group $RG_NAME \
-  --name $CLUSTER_NAME \
+  --resource-group $AKS_RG_NAME \
+  --name $AKS_CLUSTER_NAME \
   --service-principal $SP \
   --client-secret $SPPASS \
-  --node-count $NODE_COUNT \
-  --node-vm-size $NODE_SIZE \
-  --location $LOCATION \
+  --node-count $AKS_SYS_NP_NODE_COUNT \
+  --node-vm-size $AKS_SYS_NP_NODE_SIZE \
+  --location $AKS_RG_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $VMSETTYPE \
-  --kubernetes-version $VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --vm-set-type $AKS_NP_VM_TYPE \
+  --kubernetes-version $AKS_VERSION \
+  --network-plugin $AKS_CNI_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
   --api-server-authorized-ip-ranges $MY_HOME_PUBLIC_IP"/32" \
   --ssh-key-value $ADMIN_USERNAME_SSH_KEYS_PUB \
   --admin-username $GENERIC_ADMIN_USERNAME \
-  --nodepool-name sysnpool \
-  --nodepool-tags "env=syspool" \
+  --nodepool-name sysnp \
+  --nodepool-tags "env=sysnp" \
   --debug
 fi
 
 ## Logic for VMASS only
-if [[ "$VMSETTYPE" == "AvailabilitySet" ]]; then
+if [[ "$AKS_NP_VM_TYPE" == "AvailabilitySet" ]]; then
   echo "Skip second Nodepool - VMAS dont have it"
 else
-  if [[ "$HAS_2ND_NODEPOOL"  == "1" ]]; then
+  if [[ "$AKS_HAS_2ND_NODEPOOL"  == "1" ]]; then
   ## Add User nodepooll
   echo 'Add Node pool type User'
   az aks nodepool add \
-    --resource-group $RG_NAME \
-    --name usernpool \
-    --cluster-name $CLUSTER_NAME \
+    --resource-group $AKS_RG_NAME \
+    --name usrnp \
+    --cluster-name $AKS_CLUSTER_NAME \
     --node-osdisk-type Ephemeral \
-    --node-osdisk-size $USER_NODE_DISK_SIZE \
-    --kubernetes-version $VERSION \
+    --node-osdisk-size $AKS_USR_NP_NODE_DISK_SIZE \
+    --kubernetes-version $AKS_VERSION \
     --tags "env=userpool" \
     --mode User \
-    --node-count $USER_NODE_COUNT \
-    --node-vm-size $USER_NODE_SIZE \
+    --node-count $AKS_USR_NP_NODE_COUNT \
+    --node-vm-size $AKS_USR_NP_NODE_SIZE \
     --debug
   fi
 fi
 
 
-if [[ "$HAS_JUMP_SERVER" == "1" ]] 
+if [[ "$AKS_HAS_JUMP_SERVER" == "1" ]] 
 then
 
   ## VM Jump Client subnet Creation
   echo "Create VM Subnet"
   az network vnet subnet create \
-    --resource-group $RG_NAME \
-    --vnet-name $VNET_NAME \
-    --name $VM_SUBNET_NAME \
-    --address-prefixes $VM_SNET_CIDR \
+    --resource-group $AKS_RG_NAME \
+    --vnet-name $AKS_VNET \
+    --name $JS_VM_SUBNET_NAME \
+    --address-prefixes $JS_VM_SNET_CIDR \
     --debug
   
   
   ## VM NSG Create
   echo "Create NSG"
   az network nsg create \
-    --resource-group $RG_NAME \
-    --name $VM_NSG_NAME \
+    --resource-group $AKS_RG_NAME \
+    --name $JS_VM_NSG_NAME \
     --debug
   
   ## Public IP Create
   echo "Create Public IP"
   az network public-ip create \
-    --name $VM_PUBLIC_IP_NAME \
-    --resource-group $RG_NAME \
+    --name $JS_VM_PUBLIC_IP_NAME \
+    --resource-group $AKS_RG_NAME \
     --debug
   
   
   ## VM Nic Create
   echo "Create VM Nic"
   az network nic create \
-    -g $RG_NAME \
-    --vnet-name $VNET_NAME \
-    --subnet $VNET_SUBNET_NAME \
-    -n $VM_NIC_NAME \
-    --network-security-group $VM_NSG_NAME \
+    --resource-group $AKS_RG_NAME \
+    --vnet-name $JS_VNET_NAME \
+    --subnet $JS_VM_SUBNET_NAME \
+    --name $JS_VM_NIC_NAME \
+    --network-security-group $JS_VM_NSG_NAME \
     --debug 
   
   ## Attache Public IP to VM NIC
   echo "Attach Public IP to VM NIC"
   az network nic ip-config update \
-    --name $VM_DEFAULT_IP_CONFIG \
-    --nic-name $VM_NIC_NAME \
-    --resource-group $RG_NAME \
-    --public-ip-address $VM_PUBLIC_IP_NAME \
+    --name $JS_VM_DEFAULT_IP_CONFIG \
+    --nic-name $JS_VM_NIC_NAME \
+    --resource-group $AKS_RG_NAME \
+    --public-ip-address $JS_VM_PUBLIC_IP_NAME \
     --debug
   
   ## Update NSG in VM Subnet
   echo "Update NSG in VM Subnet"
   az network vnet subnet update \
-    --resource-group $RG_NAME \
-    --name $VNET_SUBNET_NAME \
-    --vnet-name $VNET_NAME \
-    --network-security-group $VM_NSG_NAME \
-  --debug
+    --resource-group $AKS_RG_NAME \
+    --name $JS_VM_SUBNET_NAME \
+    --vnet-name $AKS_VNET \
+    --network-security-group $JS_VM_NSG_NAME \
+    --debug
 
   ## Create VM
   echo "Create VM"
   az vm create \
-    --resource-group $RG_NAME \
-    --authentication-type $AUTH_TYPE \
-    --name $VM_NAME \
-    --computer-name $VM_INTERNAL_NAME \
-    --image $IMAGE \
-    --size $VM_SIZE \
+    --resource-group $AKS_RG_NAME \
+    --authentication-type $JS_AUTH_TYPE \
+    --name $JS_VM_NAME \
+    --computer-name $JS_VM_INTERNAL_NAME \
+    --image $JS_IMAGE \
+    --size $JS_VM_SIZE \
     --admin-username $GENERIC_ADMIN_USERNAME \
     --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
-    --storage-sku $VM_STORAGE_SKU \
-    --os-disk-size-gb $VM_OS_DISK_SIZE \
-    --os-disk-name $VM_OS_DISK_NAME \
-    --nics $VM_NIC_NAME \
-    --tags $TAGS \
+    --storage-sku $JS_VM_STORAGE_SKU \
+    --os-disk-size-gb $JS_VM_OS_DISK_SIZE \
+    --os-disk-name $JS_VM_OS_DISK_NAME \
+    --nics $JS_VM_NIC_NAME \
+    --tags $JS_TAGS \
     --debug
   
   echo "Sleeping 45s - Allow time for Public IP"
   sleep 45
   
   ## Output Public IP of VM
-  echo "Public IP of VM is:"
-  #VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress, name:[].name, tags:[].tags.purpose}" -o json | jq -r ".ip, .name, .tags | @csv")
-  VM_PUBLIC_IP=$(az network public-ip list -g $RG_NAME --query "{ip:[].ipAddress}" -o json | jq -r ".ip | @csv")
-  VM_PUBLIC_IP_PARSED=$(echo $VM_PUBLIC_IP | sed 's/"//g')
-  echo $VM_PUBLIC_IP_PARSED
-  
+  echo "Getting Public IP of VM"
+  VM_PUBLIC_IP=$(az network public-ip list \
+    --resource-group $AKS_RG_NAME \
+    --output json | jq -r ".[] | select ( .name == \"$JS_VM_PUBLIC_IP_NAME\" ) | [ .ipAddress ] | @tsv")
+  echo "Public IP of VM is:" 
+  echo $VM_PUBLIC_IP
+
   ## Allow SSH from my Home
   echo "Update VM NSG to allow SSH"
   az network nsg rule create \
-    --nsg-name $VM_NSG_NAME \
-    --resource-group $RG_NAME \
+    --nsg-name $JS_VM_NSG_NAME \
+    --resource-group $AKS_RG_NAME \
     --name ssh_allow \
     --priority 100 \
     --source-address-prefixes $MY_HOME_PUBLIC_IP \
     --source-port-ranges '*' \
-    --destination-address-prefixes $VM_PRIV_IP \
+    --destination-address-prefixes $JS_VM_PRIV_IP \
     --destination-port-ranges 22 \
     --access Allow \
     --protocol Tcp \
@@ -474,67 +469,67 @@ then
   
   ## Input Key Fingerprint
   echo "Input Key Fingerprint" 
-  
-  FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+  FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
   
   while [[ "$FINGER_PRINT_CHECK" = "0" ]]
   do
     echo "not good to go: $FINGER_PRINT_CHECK"
     echo "Sleeping for 5s..."
     sleep 5
-    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED | wc -l)
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
   done
   
   echo "Go to go with Input Key Fingerprint"
-  ssh-keygen -F $VM_PUBLIC_IP_PARSED >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP_PARSED >> ~/.ssh/known_hosts
+  ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP >> ~/.ssh/known_hosts
   
   ## Copy to VM AKS SSH Priv Key
   echo "Copy to VM priv Key of AKS Cluster"
-  scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED:/home/$GENERIC_ADMIN_USERNAME/id_rsa
+  scp  -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/home/$GENERIC_ADMIN_USERNAME/id_rsa
   
   ## Set Correct Permissions on Priv Key
   echo "Set good Permissions on AKS Priv Key"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "chmod 700 /home/$GENERIC_ADMIN_USERNAME/id_rsa"
   
   ## Install and update software
   echo "Updating VM and Stuff"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "sudo apt update && sudo apt upgrade -y"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "sudo apt update && sudo apt upgrade -y"
   
   ## VM Install software
   echo "VM Install software"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo apt install tcpdump wget snap dnsutils -y
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt install tcpdump wget snap dnsutils -y
 
   ## Add Az Cli
   echo "Add Az Cli"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
   
   ## Install Kubectl
   echo "Install Kubectl"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install kubectl --classic
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo snap install kubectl --classic
   
   ## Install JQ
   echo "Install JQ"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED sudo snap install jq
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo snap install jq
   
   ## Add Kubectl completion
   echo "Add Kubectl completion"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "source <(kubectl completion bash)"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "source <(kubectl completion bash)"
 
   ## Add Win password
   echo "Add Win password"
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP "touch ~/win-pass.txt && echo "$WINDOWS_AKS_ADMIN_PASSWORD" > ~/win-pass.txt"
   
   ## Create the SSH into Node Helper file
   echo "Process SSH into Node into SSH VM"
   AKS_1ST_NODE_IP=$(kubectl get nodes -o=wide | awk 'FNR == 2 {print $6}')
   AKS_STRING_TO_DO_SSH='ssh -o ServerAliveInterval=180 -o ServerAliveCountMax=2 -i id_rsa'
-  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP_PARSED echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
-  
+  ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP echo "$AKS_STRING_TO_DO_SSH $GENERIC_ADMIN_USERNAME@$AKS_1ST_NODE_IP >> gtno.sh"
+
+  echo "Public IP of the VM"
+  echo $VM_PUBLIC_IP
+
 fi
 
 ## Get Credentials
 echo "Getting Cluster Credentials"
-az aks get-credentials --resource-group $RG_NAME --name $CLUSTER_NAME --overwrite-existing
-echo "Public IP of the VM"
-echo $VM_PUBLIC_IP_PARSED
+az aks get-credentials --resource-group $AKS_RG_NAME --name $AKS_CLUSTER_NAME --overwrite-existing
 
