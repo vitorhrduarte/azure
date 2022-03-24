@@ -28,7 +28,7 @@ echo "Postfix"
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt install postfix -y
 echo ""
 echo "Insert Mail Dir"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo postconf \"home_mailbox = maildir/\"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo postconf \"home_mailbox = Maildir/\"
 echo ""
 echo "Restart Postfix"
 ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo systemctl restart postfix
