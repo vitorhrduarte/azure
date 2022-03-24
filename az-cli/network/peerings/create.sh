@@ -1,6 +1,11 @@
 ##!/usr/bin/env bash
-set -e
-. ./params.sh
+
+
+## Vnet Information
+JS_VNET_RG="rg-vm-jpsrv"
+JS_VNET_NAME="vnet-vm-jpsrv"
+
+
 
 ## Function to get Peerings status
 funcShowPeerings () {

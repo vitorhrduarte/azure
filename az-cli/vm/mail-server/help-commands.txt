@@ -1,0 +1,49 @@
+## Star the connection
+telnet MAIL_SRV_IP 25
+
+## Being polite
+HELO its me
+
+## Mail from
+mail from: amail
+
+##Mail to
+rcpt to: bmail
+
+## Enter mail, end with "." on a line by itself
+data
+This is the email contents
+.
+
+## Quit
+quit
+
+
+
+Useful commands (taken from Internet Resource):
+To Display the mail header and contents
+# postcat -q “Queue ID”
+# postcat -q C79CEC3F6BC
+
+To check the total number of mails in the queue
+# postqueue -p | grep -c "^[A-Z0-9]"
+
+
+To reattempt delivery of all mails in the queue
+# postqueue -f
+
+
+To remove all Mails in the Queue
+# postsuper -d ALL
+
+
+To remove all mails in the deferred Queue
+# postsuper -d ALL deferred
+
+
+To remove particular mail in the queue.
+# postsuper -d “Queue ID”
+
+To remove all mails from a particular mail id
+# postsuper -d C79CEC3F6BC
+
