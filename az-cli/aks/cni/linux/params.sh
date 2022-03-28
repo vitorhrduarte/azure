@@ -1,8 +1,8 @@
 ## Frequent AKS Var's to change
-AKS_NAME="pk"
+AKS_NAME="dns"
 AKS_RG_LOCATION="westeurope"
 AKS_VERSION="1.20.13"
-AKS_VNET_2_OCTETS="10.1"   # Define the fisrt 2 octets for Vnet
+AKS_VNET_2_OCTETS="10.4"   # Define the fisrt 2 octets for Vnet
 
 
 ## AKS Vnet Settings
@@ -32,6 +32,7 @@ AKS_USR_NP_NODE_COUNT="2"
 AKS_SYS_NP_NODE_DISK_SIZE="90"
 AKS_USR_NP_NODE_DISK_SIZE="100"
 AKS_NP_VM_TYPE="VirtualMachineScaleSets"
+AKS_MAX_PODS_PER_NODE="30"
 
 
 ## AKS Networking
