@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  dns-srv.server: | 
+    snotfcp.local:53 {
+        log
+        errors
+        forward . 10.3.10.4
+        cache 3600
+    }
+
