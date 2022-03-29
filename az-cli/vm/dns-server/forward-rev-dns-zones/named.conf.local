@@ -1,0 +1,21 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+                                                                                                                                                                                                                          
+zone "snotfcp.local" IN { // Domain name
+     type master; // Primary DNS
+     file "/etc/bind/forward.snotfcp.local.db"; // Forward lookup file
+     allow-update { none; }; // Since this is the primary DNS, it should be none.
+}; 
+
+zone "10.3.10.in-addr.arpa" IN { //Reverse lookup name, should match your network in reverse order
+     type master; // Primary DNS
+     file "/etc/bind/reverse.snotfcp.local.db"; //Reverse lookup file
+     allow-update { none; }; //Since this is the primary DNS, it should be none.
+};
+

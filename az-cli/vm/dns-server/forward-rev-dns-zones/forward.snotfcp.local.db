@@ -1,0 +1,32 @@
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     dns-srv.snotfcp.local. root.dns-srv.snotfcp.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      localhost.
+@       IN      A       127.0.0.1
+@       IN      AAAA    ::1
+
+
+                                                                                                                                                                                                                 
+;Name Server Information
+@        IN      NS      dns-srv.snotfcp.local.
+
+;IP address of Name Server
+dns-srv     IN      A       10.3.10.4
+
+;Mail Exchanger
+snotfcp.local.   IN     MX   10   mail.snotfcp.local.
+
+;A – Record HostName To Ip Address
+www     IN       A      10.3.10.5
+mail    IN       A      10.3.10.7
+
+;CNAME record
+ftp     IN      CNAME   www.snotfcp.local. 
