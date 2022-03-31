@@ -11,7 +11,7 @@ AZURE_VM_JIT_INITIATE_NAME="jit-vm-post.json"
 AZURE_VM_JIT_DURATION="P1D" # 1 DAY, for hours use: PT6H
 
 ## Local ISP Details
-MY_ISP_IP=$(curl -s https://ifconfig.io)
+MY_ISP_IP=$(curl -s -4 https://ifconfig.io)
 
 
 #############
