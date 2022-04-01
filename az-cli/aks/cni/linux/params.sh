@@ -1,9 +1,10 @@
 ## Frequent AKS Var's to change
-AKS_NAME="dns"
+AKS_NAME="today"
 AKS_RG_LOCATION="westeurope"
 AKS_VERSION="1.20.13"
 AKS_VNET_2_OCTETS="10.4"   # Define the fisrt 2 octets for Vnet
-
+AKS_ZONES="1 2 3"          # Define AKS Zones
+AKS_2ND_NP_ZONES="1"       # Defines NP Zones
 
 ## AKS Vnet Settings
 AKS_VNET_CIDR="$AKS_VNET_2_OCTETS.0.0/16"

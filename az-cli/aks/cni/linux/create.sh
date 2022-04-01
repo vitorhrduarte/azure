@@ -61,6 +61,7 @@ if [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MAN
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug 
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
@@ -92,6 +93,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
@@ -120,6 +122,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug  
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
@@ -152,6 +155,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -180,6 +184,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -206,6 +211,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 1 ]]; then
@@ -234,6 +240,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
@@ -263,6 +270,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 1 && $AKS_HAS_AUTO_SCALER -eq 0 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 0 && $AKS_HAS_NETWORK_POLICY -eq 0 ]]; then
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -293,6 +301,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug
 elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_MANAGED_IDENTITY -eq 1 && $AKS_HAS_NETWORK_POLICY -eq 1 ]]; then
@@ -324,6 +333,7 @@ elif [[ $AKS_HAS_AZURE_MONITOR -eq 0 && $AKS_HAS_AUTO_SCALER -eq 1 && $AKS_HAS_M
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --yes \
   --debug
 else
@@ -352,6 +362,7 @@ else
   --nodepool-name sysnp \
   --nodepool-tags "env=sysnp" \
   --max-pods $AKS_MAX_PODS_PER_NODE \
+  --zones $AKS_ZONES \
   --debug
 fi
 
@@ -374,6 +385,7 @@ else
     --node-count $AKS_USR_NP_NODE_COUNT \
     --node-vm-size $AKS_USR_NP_NODE_SIZE \
     --max-pods $AKS_MAX_PODS_PER_NODE \
+    --zones $AKS_2ND_NP_ZONES \
     --debug
   fi
 fi
