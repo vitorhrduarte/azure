@@ -1,12 +1,6 @@
 ##!/usr/bin/env bash
 
 
-## Vnet Information
-JS_VNET_RG="rg-vm-jpsrv"
-JS_VNET_NAME="vnet-vm-jpsrv"
-
-
-
 ## Function to get Peerings status
 funcShowPeerings () {
   az network vnet peering list \
@@ -92,6 +86,10 @@ Install Pre-requisites jq and dialog
 -o, -operation,     --operation             Set operation type for the VNET Peering
                                             peer or unpeer Or status
 
+-k,                 --orivnetname           Define origin Vnet Name
+ 
+-j,                 --origroup              Define origin Vnet RG Name
+
 -g, -group,         --group                 Destination Vnet Group
 
 -n, -name,          --name                  Destination Vnet Name
@@ -99,7 +97,7 @@ Install Pre-requisites jq and dialog
 EOF
 }
 
-options=$(getopt -l "help::,operation:,group:,name:" -o "h::o:g:n:" -a -- "$@")
+options=$(getopt -l "help::,operation:,group:,name:,orivnetname:,origroup:" -o "h::o:g:n:k:j:" -a -- "$@")
 
 eval set -- "$options"
 
@@ -122,6 +120,14 @@ case $1 in
     shift
     DEST_VNET_NAME=$1
     ;;  
+-k|--orivnetname)
+    shift
+    JS_VNET_NAME=$1
+    ;;  
+-j|--origroup)
+    shift
+    JS_VNET_RG=$1
+    ;;  
 --)
     shift
     break
@@ -130,7 +136,6 @@ case $1 in
 esac
 shift
 done
-
 
 
 if [[ "$VNET_OPERATION_TYPE" == "status"  ]]
