@@ -589,6 +589,29 @@ function lab_scenario_6 () {
     --output tsv)
 
 
+  ## Create ACI
+  #echo "Create ACI"
+  az container create \
+    --resource-group $ACI_RG_NAME \
+    --name $ACI_NAME  \
+    --image mcr.microsoft.com/azuredocs/aci-hellofiles \
+    --ports 80 \
+    --vnet $ACI_VNET_NAME \
+    --vnet-address-prefix $ACI_VNET_PREFIX \
+    --subnet $ACI_SNET_NAME \
+    --subnet-address-prefix $ACI_SNET_PREFIX \
+    --azure-file-volume-account-name $ACI_PERS_STORAGE_ACCOUNT_NAME \
+    --azure-file-volume-account-key $STORAGE_KEY \
+    --azure-file-volume-share-name $ACI_PERS_SHARE_NAME \
+    --azure-file-volume-mount-path /aci/logs/ \
+    --no-wait
+
+  ## Stop the ACI, otherwise will timeout in 30m
+  #echo "Stop the ACI, otherwise will timeout in 30m"
+  az container stop \
+    --name $ACI_NAME \
+    --resource-group $ACI_RG_NAME
+
 }
 
 
