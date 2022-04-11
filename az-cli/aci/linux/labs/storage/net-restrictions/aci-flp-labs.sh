@@ -515,23 +515,23 @@ function lab_scenario_5_validation () {
 function lab_scenario_6 () {
 
 
-  ACI_RG_NAME="rg-aci-lab6"
+  ACI_RG_NAME=aci-labs-ex${LAB_SCENARIO}-rg-${USER_ALIAS}
   ACI_RG_LOCATION="westeurope"
   ACI_NAME="lab6-container"
   ACI_VNET_NAME="vnet-lab6"
   ACI_VNET_PREFIX="10.0.0.0/16"
   ACI_SNET_NAME="snet-lab6"
   ACI_SNET_PREFIX="10.0.0.0/24"
-  
   ACI_NSG_NAME="lab6-nsg"
   ACI_PRIV_IP="10.0.0.4"
-  
+ 
+ 
   ACI_PERS_RESOURCE_GROUP=$ACI_RG_NAME
-  ACI_PERS_STORAGE_ACCOUNT_NAME=m1aolstrl6$RANDOM
+  ACI_PERS_STORAGE_ACCOUNT_NAME=aciuniqstrl6$RANDOM
   ACI_PERS_LOCATION=$ACI_RG_LOCATION
   ACI_PERS_SHARE_NAME=acishare 
   
-
+  echo -e "\n--> Deploying cluster for lab${LAB_SCENARIO}...\n"
 
   ## Create RG
   #echo "Create RG"
@@ -628,7 +628,20 @@ function lab_scenario_6 () {
     --name $ACI_NAME \
     --resource-group $ACI_RG_NAME
 
+  ERROR_MESSAGE="Container Creation: Timeout"
+
+  echo -e "\n\n********************************************************"
+  echo -e "\n--> Issue description: \n Customer wants to deploy an ACI with Azure File Mount"
+  echo -e "Cx is getting the error message:"
+  echo -e "\n-------------------------------------------------------------------------------------\n"
+  echo $ERROR_MESSAGE
+  echo -e "\n-------------------------------------------------------------------------------------\n"
+  echo -e "Once you find the issue, try to start the Container"
+  echo -e "az container start --name $ACI_NAME --resource-group $ACI_RG_NAME\n"
+
 }
+
+
 
 
 
