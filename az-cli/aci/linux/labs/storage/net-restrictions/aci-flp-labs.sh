@@ -537,14 +537,14 @@ function lab_scenario_6 () {
   #echo "Create RG"
   az group create \
     --name $ACI_RG_NAME \
-    --location $ACI_RG_LOCATION 
+    --location $ACI_RG_LOCATION &>/dev/null 
 
   ## Create VNet and Subnet
   #echo "Create Vnet and Subnet"
   az network vnet create \
     --resource-group $ACI_RG_NAME \
     --name $ACI_VNET_NAME \
-    --address-prefix $ACI_VNET_PREFIX 
+    --address-prefix $ACI_VNET_PREFIX &>/dev/null
 
   ## Create ACI Vnet
   #echo "Create ACI Vnet"
@@ -552,7 +552,7 @@ function lab_scenario_6 () {
     --resource-group $ACI_RG_NAME \
     --vnet-name $ACI_VNET_NAME \
     --name $ACI_SNET_NAME \
-    --address-prefixes $ACI_SNET_PREFIX
+    --address-prefixes $ACI_SNET_PREFIX &>/dev/null
 
   ## Create the storage account with the parameters
   #echo "Create the storage account with the parameters"
@@ -560,19 +560,19 @@ function lab_scenario_6 () {
     --resource-group $ACI_PERS_RESOURCE_GROUP \
     --name $ACI_PERS_STORAGE_ACCOUNT_NAME \
     --location $ACI_PERS_LOCATION \
-    --sku Standard_LRS
+    --sku Standard_LRS &>/dev/null
 
   ## Create the file share
   #echo "Create the file share"
   az storage share create \
     --name $ACI_PERS_SHARE_NAME \
-    --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME
+    --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME &>/dev/null
 
   ## VM NSG Create
   #echo "Create NSG"
   az network nsg create \
     --resource-group $ACI_RG_NAME \
-    --name $ACI_NSG_NAME 
+    --name $ACI_NSG_NAME &>/dev/null
 
   ## Update NSG in VM Subnet
   #echo "Update NSG in VM Subnet"
@@ -580,7 +580,7 @@ function lab_scenario_6 () {
     --resource-group $ACI_RG_NAME \
     --name $ACI_SNET_NAME \
     --vnet-name $ACI_VNET_NAME \
-    --network-security-group $ACI_NSG_NAME
+    --network-security-group $ACI_NSG_NAME &>/dev/null
 
   ## Deny SMB Port 445 - Outbound
   #echo "Deny SMB Port 445 - Outbount"
@@ -596,7 +596,7 @@ function lab_scenario_6 () {
     --access Deny \
     --protocol Tcp \
     --description "Microsoft Security Port 445" \
-    --direction Outbound
+    --direction Outbound &>/dev/null
 
   STORAGE_KEY=$(az storage account keys list \
     --resource-group $ACI_PERS_RESOURCE_GROUP \
@@ -626,7 +626,7 @@ function lab_scenario_6 () {
   #echo "Stop the ACI, otherwise will timeout in 30m"
   az container stop \
     --name $ACI_NAME \
-    --resource-group $ACI_RG_NAME
+    --resource-group $ACI_RG_NAME &>/dev/null
 
   ERROR_MESSAGE="Container Creation: Timeout"
 
@@ -656,7 +656,7 @@ function lab_scenario_6_validation () {
      --output json  | jq -r ". | [ .name, .provisioningState, .instanceView.state ] | @tsv"))
 
 
-   if [ "${ARR_ACI[1]}" == "Running" && "${ARR_ACI[2]}" == "Succeeded" ]
+   if [[ "${ARR_ACI[2]}" == "Running" && "${ARR_ACI[1]}" == "Succeeded" ]]
    then
      echo -e "\n\n========================================================"
      echo -e '\nContainer instance looks good now!\n'
@@ -669,28 +669,6 @@ function lab_scenario_6_validation () {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Lab scenario 7
@@ -912,6 +890,14 @@ then
 elif [ $LAB_SCENARIO -eq 5 ] && [ $VALIDATE -eq 1 ] 
 then
     lab_scenario_5_validation
+
+elif [ $LAB_SCENARIO -eq 6 ] && [ $VALIDATE -eq 0 ] 
+then
+    lab_scenario_6
+
+elif [ $LAB_SCENARIO -eq 6 ] && [ $VALIDATE -eq 1 ] 
+then
+    lab_scenario_6_validation
 
 elif [ $LAB_SCENARIO -eq 7 ] && [ $VALIDATE -eq 0 ]
 then
