@@ -643,11 +643,32 @@ function lab_scenario_6 () {
 
 
 
+function lab_scenario_6_validation () {
+  
+   ACI_RG_NAME=aci-labs-ex${LAB_SCENARIO}-rg-${USER_ALIAS}
+   ACI_NAME="lab6-container"
+
+   declare -a ARR_ACI
+
+   ARR_ACI=($(az container show \
+     --name $ACI_NAME \
+     --resource-group $ACI_RG_NAME \
+     --output json  | jq -r ". | [ .name, .provisioningState, .instanceView.state ] | @tsv"))
 
 
+   if [ "${ARR_ACI[1]}" == "Running" && "${ARR_ACI[2]}" == "Succeeded" ]
+   then
+     echo -e "\n\n========================================================"
+     echo -e '\nContainer instance looks good now!\n'
+   else
+     echo -e "\n--> Error: Scenario $LAB_SCENARIO is still FAILED\n\n"
+     echo -e "Once you find the issue, run the next command:"
+     echo -e "az container start --name $ACI_NAME --resource-group $ACI_RG_NAME\n"
+     echo -e "Re-run validation step."
+   fi
 
 
-
+}
 
 
 
