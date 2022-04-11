@@ -539,15 +539,54 @@ function lab_scenario_6 () {
     --address-prefixes $ACI_SNET_PREFIX
 
   ## Create the storage account with the parameters
-  echo "Create the storage account with the parameters"
+  #echo "Create the storage account with the parameters"
   az storage account create \
     --resource-group $ACI_PERS_RESOURCE_GROUP \
     --name $ACI_PERS_STORAGE_ACCOUNT_NAME \
     --location $ACI_PERS_LOCATION \
     --sku Standard_LRS
 
+  ## Create the file share
+  #echo "Create the file share"
+  az storage share create \
+    --name $ACI_PERS_SHARE_NAME \
+    --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME
 
+  ## VM NSG Create
+  #echo "Create NSG"
+  az network nsg create \
+    --resource-group $ACI_RG_NAME \
+    --name $ACI_NSG_NAME 
 
+  ## Update NSG in VM Subnet
+  #echo "Update NSG in VM Subnet"
+  az network vnet subnet update \
+    --resource-group $ACI_RG_NAME \
+    --name $ACI_SNET_NAME \
+    --vnet-name $ACI_VNET_NAME \
+    --network-security-group $ACI_NSG_NAME
+
+  ## Allow SSH from local ISP
+  #echo "Update VM NSG to allow SSH"
+  az network nsg rule create \
+    --nsg-name $ACI_NSG_NAME \
+    --resource-group $ACI_RG_NAME \
+    --name MicrosoftSecurityRule \
+    --priority 4096 \
+    --source-address-prefixes '*' \
+    --source-port-ranges '*' \
+    --destination-address-prefixes "*" \
+    --destination-port-ranges 445 \
+    --access Deny \
+    --protocol Tcp \
+    --description "Microsoft Security Port 445" \
+    --direction Outbound
+
+  STORAGE_KEY=$(az storage account keys list \
+    --resource-group $ACI_PERS_RESOURCE_GROUP \
+    --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME \
+    --query "[0].value" \
+    --output tsv)
 
 
 }
