@@ -513,8 +513,24 @@ function lab_scenario_5_validation () {
 
 # Lab scenario 6
 function lab_scenario_6 () {
- 
 
+
+  ACI_RG_NAME="rg-aci-lab6"
+  ACI_RG_LOCATION="westeurope"
+  ACI_NAME="lab6-container"
+  ACI_VNET_NAME="vnet-lab6"
+  ACI_VNET_PREFIX="10.0.0.0/16"
+  ACI_SNET_NAME="snet-lab6"
+  ACI_SNET_PREFIX="10.0.0.0/24"
+  
+  ACI_NSG_NAME="lab6-nsg"
+  ACI_PRIV_IP="10.0.0.4"
+  
+  ACI_PERS_RESOURCE_GROUP=$ACI_RG_NAME
+  ACI_PERS_STORAGE_ACCOUNT_NAME=m1aolstrl6$RANDOM
+  ACI_PERS_LOCATION=$ACI_RG_LOCATION
+  ACI_PERS_SHARE_NAME=acishare 
+  
 
 
   ## Create RG
@@ -524,14 +540,14 @@ function lab_scenario_6 () {
     --location $ACI_RG_LOCATION 
 
   ## Create VNet and Subnet
-  #echo "Create Vnet for Jump Server"
+  #echo "Create Vnet and Subnet"
   az network vnet create \
     --resource-group $ACI_RG_NAME \
     --name $ACI_VNET_NAME \
     --address-prefix $ACI_VNET_PREFIX 
 
-  ## VM Linux Jump Server Creation
-  #echo "Create VM Linux Jump Server Subnet"
+  ## Create ACI Vnet
+  #echo "Create ACI Vnet"
   az network vnet subnet create \
     --resource-group $ACI_RG_NAME \
     --vnet-name $ACI_VNET_NAME \
@@ -566,8 +582,8 @@ function lab_scenario_6 () {
     --vnet-name $ACI_VNET_NAME \
     --network-security-group $ACI_NSG_NAME
 
-  ## Allow SSH from local ISP
-  #echo "Update VM NSG to allow SSH"
+  ## Deny SMB Port 445 - Outbound
+  #echo "Deny SMB Port 445 - Outbount"
   az network nsg rule create \
     --nsg-name $ACI_NSG_NAME \
     --resource-group $ACI_RG_NAME \
