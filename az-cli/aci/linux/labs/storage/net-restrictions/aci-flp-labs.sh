@@ -513,7 +513,38 @@ function lab_scenario_5_validation () {
 
 # Lab scenario 6
 function lab_scenario_6 () {
+ 
 
+
+
+  ## Create RG
+  #echo "Create RG"
+  az group create \
+    --name $ACI_RG_NAME \
+    --location $ACI_RG_LOCATION 
+
+  ## Create VNet and Subnet
+  #echo "Create Vnet for Jump Server"
+  az network vnet create \
+    --resource-group $ACI_RG_NAME \
+    --name $ACI_VNET_NAME \
+    --address-prefix $ACI_VNET_PREFIX 
+
+  ## VM Linux Jump Server Creation
+  #echo "Create VM Linux Jump Server Subnet"
+  az network vnet subnet create \
+    --resource-group $ACI_RG_NAME \
+    --vnet-name $ACI_VNET_NAME \
+    --name $ACI_SNET_NAME \
+    --address-prefixes $ACI_SNET_PREFIX
+
+  ## Create the storage account with the parameters
+  echo "Create the storage account with the parameters"
+  az storage account create \
+    --resource-group $ACI_PERS_RESOURCE_GROUP \
+    --name $ACI_PERS_STORAGE_ACCOUNT_NAME \
+    --location $ACI_PERS_LOCATION \
+    --sku Standard_LRS
 
 
 
