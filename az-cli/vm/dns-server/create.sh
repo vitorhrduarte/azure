@@ -5,7 +5,7 @@ set -e
 
 if [[ $JUST_BIND -eq "0" && $ALL -eq "1" ]]; then
     echo "Create VM"
-    bash create-all.sh
+    bash create-infra-vm.sh
     echo ""
     echo "Setup Bind9 Server"
     bash create-just-bind9.sh
