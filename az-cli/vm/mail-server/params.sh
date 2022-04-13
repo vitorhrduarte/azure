@@ -1,21 +1,21 @@
 ## Running Options
 CREATE_MAIL_SRV="1"
-CREATE_POSTFIX="0"
+CREATE_POSTFIX="1"
 
 ## Core Networking
-AKS_MAIN_VNET_RG="rg-aks-cal"
-AKS_MAIN_VNET_NAME="vnet-full-aks-cal"
-AKS_MAIN_VNET_LOCATION="eastus"
-AKS_MAIN_VNET_CIDR="10.0.0.0/16"
-AKS_SUBNET_CIDR="10.0.0.0/22"
+AKS_MAIN_VNET_RG="rg-aks-dns"
+AKS_MAIN_VNET_NAME="vnet-aks-dns"
+AKS_MAIN_VNET_LOCATION="westeurope"
+AKS_MAIN_VNET_CIDR="10.4.0.0/16"
+AKS_SUBNET_CIDR="10.4.0.0/23"
 
 ## VM Specific Networking
 VM_MAIL_SUBNET_NAME="mail-server"
-VM_MAIL_SNET_CIDR="10.0.10.0/28"
-VM_MAIL_PRIV_IP="10.0.10.4/32"
+VM_MAIL_SNET_CIDR="10.4.100.0/28"
+VM_MAIL_PRIV_IP="10.4.100.4/32"
 
 ## Local ISP PIP
-VM_MY_ISP_IP=$(curl ifconfig.io)
+VM_MY_ISP_IP=$(curl -s -4 ifconfig.io)
 
 ## Public IP Name
 VM_MAIL_PUBLIC_IP_NAME="mailsrvpip"
