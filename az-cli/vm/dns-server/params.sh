@@ -1,14 +1,16 @@
 ## Running Options
-JUST_BIND="0"
-ALL="1"
+JUST_BIND="0"              # 1 - If we just want to deploy Bind server
+ALL="1"                    # 1 - If we want to deploy all, VM + Bind
+AKS_VNET_PREFIX="10.3"     # Having in mind Vnet Peering, we need to make sure no Vnet overlaps
+
 
 ## Core Networking
 MAIN_VNET_RG="rg-aks-dns"
-MAIN_VNET_NAME="vnet-full-aks-dns"
-MAIN_VNET_LOCATION="westus"
+MAIN_VNET_NAME="vnet-aks-dns"
+MAIN_VNET_LOCATION="westeurope"
 
 ## AKS SubNet details
-AKS_SUBNET_CIDR="10.0.0.0/22"
+AKS_SUBNET_CIDR="$AKS_VNET_PREFIX.0.0/23"
 
 ## Bind9 Forwarders
 VM_BIND_FORWARDERS_01="1.1.1.1"
@@ -16,11 +18,11 @@ VM_BIND_FORWARDERS_02="8.8.8.8"
 
 ## VM Specific Networking
 VM_DNS_SUBNET_NAME="dns-server"
-VM_DNS_SNET_CIDR="10.0.10.0/28"
-VM_DNS_PRIV_IP="10.0.10.4/32"
+VM_DNS_SNET_CIDR="$AKS_VNET_PREFIX.10.0/28"
+VM_DNS_PRIV_IP="$AKS_VNET_PREFIX.10.4/32"
 
 ## Local ISP PIP
-VM_MY_ISP_IP=$(curl ifconfig.io)
+VM_MY_ISP_IP=$(curl -s -4 ifconfig.io)
 
 ## Public IP Name
 VM_DNS_PUBLIC_IP_NAME="dnssrvpip"
