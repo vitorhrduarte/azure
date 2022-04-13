@@ -11,7 +11,11 @@ echo $VM_PUBLIC_IP
 
 ## Update Mail Server VM
 echo "Update DNS Server VM"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update && sudo apt upgrade -y
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update
+
+## Upgrade Mail Server VM
+echo "Upgrade Mail Server VM"
+ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt upgrade -y
 
 ## Install Postfix
 echo ""
