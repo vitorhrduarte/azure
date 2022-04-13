@@ -1,13 +1,13 @@
 ## Running Options
-CREATE_MAIL_SRV="1"
-CREATE_POSTFIX="1"
+CREATE_MAIL_SRV="1"   # 1 - If we want just to deploy the VM
+CREATE_POSTFIX="1"    # 1 - If we want to deploy Bind setup, assuming existing VM
 
 ## Core Networking
-AKS_MAIN_VNET_RG="rg-aks-dns"
-AKS_MAIN_VNET_NAME="vnet-aks-dns"
-AKS_MAIN_VNET_LOCATION="westeurope"
-AKS_MAIN_VNET_CIDR="10.4.0.0/16"
-AKS_SUBNET_CIDR="10.4.0.0/23"
+AKS_MAIN_VNET_RG="rg-aks-dns"         # Vnet RG Name
+AKS_MAIN_VNET_NAME="vnet-aks-dns"     # Vnet Name
+AKS_MAIN_VNET_LOCATION="westeurope"   # Vnet/RG Location
+AKS_MAIN_VNET_CIDR="10.4.0.0/16"      # Vnet CIDR
+AKS_SUBNET_CIDR="10.4.0.0/23"         # Vnet Snet CIDR
 
 ## VM Specific Networking
 VM_MAIL_SUBNET_NAME="mail-server"
