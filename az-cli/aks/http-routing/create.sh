@@ -114,7 +114,7 @@ funcHttpRoutingAksDNS () {
   AKS_SPECIFIC_DNS_ZONE=$(az aks show \
     --resource-group $AKS_RG_NAME \
     --name $AKS_NAME \
-    --output json  &>/dev/null | jq -r ".addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName" | wc -l)  
+    --output json | jq -r ".addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName" | wc -l)  
 
   if [[ "$AKS_SPECIFIC_DNS_ZONE" == "0"  ]]
   then
@@ -129,7 +129,7 @@ funcHttpRoutingAksDNS () {
   AKS_SPECIFIC_DNS_ZONE=$(az aks show \
     --resource-group $AKS_RG_NAME \
     --name $AKS_NAME \
-    --output json  &>/dev/null | jq -r ".addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName")   
+    --output json | jq -r ".addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName")   
 
 }
 
