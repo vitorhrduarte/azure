@@ -1,18 +1,20 @@
 ## Running Options
 CREATE_MAIL_SRV="1"   # 1 - If we want just to deploy the VM
 CREATE_POSTFIX="1"    # 1 - If we want to deploy Bind setup, assuming existing VM
+VNET_PREFIX="10.3"    # Define Vnet Prefix CIDR
+
 
 ## Core Networking
 AKS_MAIN_VNET_RG="rg-aks-dns"         # Vnet RG Name
 AKS_MAIN_VNET_NAME="vnet-aks-dns"     # Vnet Name
 AKS_MAIN_VNET_LOCATION="westeurope"   # Vnet/RG Location
-AKS_MAIN_VNET_CIDR="10.4.0.0/16"      # Vnet CIDR
-AKS_SUBNET_CIDR="10.4.0.0/23"         # Vnet Snet CIDR
+AKS_MAIN_VNET_CIDR="$VNET_PREFIX.0.0/16"      # Vnet CIDR
+AKS_SUBNET_CIDR="$VNET_PREFIX.0.0/23"         # Vnet Snet CIDR
 
 ## VM Specific Networking
 VM_MAIL_SUBNET_NAME="mail-server"
-VM_MAIL_SNET_CIDR="10.4.100.0/28"
-VM_MAIL_PRIV_IP="10.4.100.4/32"
+VM_MAIL_SNET_CIDR="$VNET_PREFIX.100.0/28"
+VM_MAIL_PRIV_IP="$VNET_PREFIX.100.4/32"
 
 ## Local ISP PIP
 VM_MY_ISP_IP=$(curl -s -4 ifconfig.io)
