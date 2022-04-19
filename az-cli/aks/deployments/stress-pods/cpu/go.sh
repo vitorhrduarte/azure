@@ -53,7 +53,7 @@ done
 
 funcHasTags () {
   ## Check if the TAG have beein provided 
-  echo "Check if the TAG have beein provided"
+  echo "Check if the TAG have being provided"
   if [[ -z "$NP_INSTANCE_TAG_NAME" ]];
   then
     echo "No Hostname Provided"
@@ -62,6 +62,23 @@ funcHasTags () {
     echo "Hostname Provided"
     HAS_HOSTNAME="1"
   fi
+}
+
+
+funcCheckNodeExistence () {
+  if [[ "$HAS_HOSTNAME" == "1" ]];
+  then 
+    ## Check if hostname exist in current AKS cluster
+    echo "Check if hostname exist in current AKS cluster"
+    NPINSTANCE_EXIST=$(kubectl get nodes -l "kubernetes.io/hostname="$NP_INSTANCE_TAG_NAME | wc -l)
+
+    if [[ "$NPINSTANCE_EXIST" == "0"  ]];
+    then
+      echo "$NP_INSTANCE_TAG_NAME does not exist in current AKS cluster"
+      echo "Exiting..."
+      exit 0
+    fi
+  fi  
 }
 
 
@@ -103,7 +120,28 @@ EOF
 }
 
 
+funcDeployYaml () {
+  ## Deploy Yaml
+  echo "Deploy Yaml"
+  kubectl apply -f pod-cpu.yaml  
+}
 
 
+################################
+##
+## Core
+##
+###############################
 
-
+echo ""
+echo "Process TAGS if Any"
+funcHasTags 
+echo ""
+echo "If TAGS are there, check if hostname exists"
+funcCheckNodeExistence
+echo ""
+echo "Create Yaml"
+funcCreateYaml
+echo ""
+echo "Deploy Yaml"
+funcDeployYaml
