@@ -1,0 +1,1 @@
+ps -eo pid,%cpu,comm --sort=-%cpu | awk '$2>=3.2' | awk '{print $1}' | xargs -I '{}' bash -c "pstree -als {}" | grep containerd-shim | awk '{print $5}' | uniq | xargs -I '{}' bash -c "crictl ps --no-trunc -p {} && echo "" && crictl pods --id {}"
