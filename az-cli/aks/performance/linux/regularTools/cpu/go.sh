@@ -56,4 +56,65 @@ done
 
 
 
-ps -eo pid,%cpu,comm --sort=-%cpu | awk '$2>=3.2' | awk '{print $1}' | xargs -I '{}' bash -c "pstree -als {}" | grep containerd-shim | awk '{print $5}' | uniq | xargs -I '{}' bash -c "crictl ps --no-trunc -p {} && echo "" && crictl pods --id {}"
+
+
+PERCENTAGE_ABOVE="1"
+LOOP_SLEEP_SEC="2"
+
+declare -a ARR_PS
+
+IFS=$'\n'
+
+
+ARR_PS=($(ps --no-headers -eo pid,%cpu,comm --sort=-%cpu | awk '$2>='"$PERCENTAGE_ABOVE"'' | awk '{print $1}'))
+
+declare -A ARR_PS_CONT_ID
+
+echo ""
+j=0
+for i in "${ARR_PS[@]}"
+do
+        TEMP_POD_ID=$(pstree -als $i | grep containerd-shim | awk '{print $5}'  | uniq)
+        if [[ -z $TEMP_POD_ID ]];
+        then
+                ARR_PS_CONT_ID[$j,0]="$i"
+                ARR_PS_CONT_ID[$j,1]="PID_IS_NOT_A_POD"
+        else
+                ARR_PS_CONT_ID[$j,0]="$i"
+                ARR_PS_CONT_ID[$j,1]="$TEMP_POD_ID"
+        fi
+        j=$((j+1))
+done
+
+
+i=$(expr ${#ARR_PS_CONT_ID[@]} / 2)
+
+rm -rf out.txt
+touch out.txt
+
+l="y"
+LOOP_CONTROL="0"
+
+while :;
+do
+for ((j=0; j<$i; j++))
+do
+        if [[ "${ARR_PS_CONT_ID[$j,1]}" != "PID_IS_NOT_A_POD" ]];
+        then
+                if [[ "$LOOP_CONTROL" == "0" ]];
+                then
+                        crictl pods --id "${ARR_PS_CONT_ID[$j,1]}"  | awk 'NR==1 {print $1" "$2" "$3" "$4" "$5" "$6" "$7}'  | ts '%Y-%m-%d %H:%M:%S' | tee -a out.txt
+                        LOOP_CONTROL="1"
+                fi 
+                crictl pods --id "${ARR_PS_CONT_ID[$j,1]}"  | awk 'NR>1 {print $1" "$2" "$3" "$4" "$5" "$6" "$7}'  | ts '%Y-%m-%d %H:%M:%S' | tee -a out.txt
+        fi
+done
+
+if [[ "$l" != "y" ]];
+then
+     exit 1
+fi
+
+sleep $LOOP_SLEEP_SEC
+
+done
