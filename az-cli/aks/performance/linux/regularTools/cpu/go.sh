@@ -12,7 +12,7 @@ cat << EOF
 Usage: 
 
 bash go.sh --help/-h  [for help]
-bash go.sh -t/--top <get-top-X-pid - integer> -p/--percentage <percentage-above-cpu-we-want-to-consider integer> -l/--loop <need-endless-loop y/n> 
+bash go.sh -p/--percentage <percentage-above-cpu-we-want-to-consider integer> -l/--loop <need-endless-loop y/n> 
 bash go.sh -p 50 -l y
 
 Install Pre-requisites ts (apt install moreutils) to add timestamp to every line
