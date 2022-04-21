@@ -13,9 +13,9 @@ Usage:
 
 bash go.sh --help/-h  [for help]
 bash go.sh -t/--top <get-top-X-pid - integer> -p/--percentage <percentage-above-cpu-we-want-to-consider integer> -l/--loop <need-endless-loop y/n> 
-bash go.sh -t 20 -p 50 -l y
+bash go.sh -p 50 -l y
 
-Install Pre-requisites JQ
+Install Pre-requisites ts (apt install moreutils) to add timestamp to every line
 
 -h, -help,          --help                  Display help
 
