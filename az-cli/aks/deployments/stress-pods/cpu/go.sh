@@ -16,7 +16,7 @@ Install Pre-requisites JQ
 -p, -pod,           --pod                   Define pod name
 
 -t, -tag,           --tag                   Define, if we want, if defined, deploy pod in a
-											specific nodepool instance          
+                                            specific nodepool instance          
 EOF
 }
 
