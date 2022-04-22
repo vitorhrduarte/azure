@@ -1,0 +1,34 @@
+name: build-and-push
+
+on:
+    release:
+        types: [published]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup shc tool
+      run: |
+        sudo apt-get update && sudo apt-get install software-properties-common -y
+        sudo add-apt-repository ppa:neurobin/ppa -y
+        sudo apt-get update && sudo apt-get install shc -y
+    - name: Create new binary using script
+      run: |
+        rm -f acilabs_binaries/*
+        bash shc_script_converter.sh
+    - name: Login to Docker Registry
+      run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - name: Get the version
+      run: echo TAG_ID=${GITHUB_REF:10} >> $GITHUB_ENV
+    - name: Build the tagged Docker image
+      run: docker build . --file Dockerfile -t typeoneg/aci-flp-labs:"${TAG_ID}"
+    - name: Push the tagged Docker image
+      run: docker push typeoneg/aci-flp-labs:"${TAG_ID}"
+    - name: Tag the latest Docker image
+      run: docker tag typeoneg/aci-flp-labs:"${TAG_ID}" typeoneg/aci-flp-labs:latest
+    - name: Push the latest Docker image
+      run: docker push typeoneg/aci-flp-labs:latest
