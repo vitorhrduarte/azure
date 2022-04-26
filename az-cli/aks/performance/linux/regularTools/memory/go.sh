@@ -39,7 +39,7 @@ case $1 in
     ;;  
 -p|--percentage)
     shift
-    PERCENTAGE_CPU=$1
+    PERCENTAGE_MEM=$1
     ;;  
 -l|--loop)
     shift
@@ -60,12 +60,12 @@ rm -rf $OUTPUT_FILE_NAME
 touch $OUTPUT_FILE_NAME
 LOOP_CONTROL="0"
 
-## Get All PID that are above the PERCENTAGE_CPU 
+## Get All PID that are above the PERCENTAGE_MEM 
 while :;
   declare -a ARR_PS=()
   IFS=$'\n'
   
-  ARR_PS=($(ps --no-headers -eo pid,%cpu,comm --sort=-%mem | awk '$2>='"$PERCENTAGE_CPU"'' | awk '{print $1}'))
+  ARR_PS=($(ps --no-headers -eo pid,%mem,comm --sort=-%mem | awk '$2>='"$PERCENTAGE_MEM"'' | awk '{print $1}'))
 
   ## For each of those PID, get the one that are pods 
   declare -A ARR_PS_CONT_ID=()
