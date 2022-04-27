@@ -184,7 +184,7 @@ then
   
   ## Copy to VM AKS SSH Priv Key
   echo "Copy to VM priv Key of AKS Cluster"
-  scp -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/home/$GENERIC_ADMIN_USERNAME/./ssh/id_rsa
+  scp -o 'StrictHostKeyChecking no' -i $SSH_PRIV_KEY $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP:/home/$GENERIC_ADMIN_USERNAME/.ssh/id_rsa
 
 
   ## Set Correct Permissions on Priv Key
