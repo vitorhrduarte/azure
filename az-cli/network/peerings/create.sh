@@ -77,9 +77,9 @@ cat << EOF
 Usage: 
 
 bash create.sh --help/-h  [for help]
-bash create.sh -o/--operation <peer unpeer status> -g/--group <destination-rg-name> -n/--name <destination-vnet-name>
+bash create.sh -o/--operation <peer unpeer status> -g/--group <destination-rg-name> -n/--name <destination-vnet-name> -k/--orivnetname <ori-vnet-name> -j/--origroup <vnet-ori-group>
 
-Install Pre-requisites jq and dialog
+Install Pre-requisites JQ
 
 -h, -help,          --help                  Display help
 
