@@ -93,6 +93,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: $POD_NAME
+  labels:
+    purpose: perf
 spec:
   containers:
   - image: typeoneg/stresstest-pod:v1 
@@ -108,6 +110,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: $POD_NAME
+  labels:
+    purpose: perf
 spec:
   containers:
   - image: typeoneg/stresstest-pod:v1 
