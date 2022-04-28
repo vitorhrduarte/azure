@@ -85,10 +85,15 @@ funcCheckNodeExistence () {
 funcCreateYaml () {
   ## Create Yaml to be Deployed
   echo "Create Yaml to be Deployed"
-  
+ 
+  ## Remove existent pod-mem.yaml
+  echo "Remove existent pod-mem.yaml"
+  rm -rf pod-mem.yaml
+
+
   if [[ "$HAS_HOSTNAME" == "1" ]];
   then
-cat <<EOF > pod-cpu.yaml
+cat <<EOF > pod-mem.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -103,7 +108,7 @@ spec:
     kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
 EOF
   else
-cat <<EOF > pod-cpu.yaml
+cat <<EOF > pod-mem.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -123,7 +128,7 @@ EOF
 funcDeployYaml () {
   ## Deploy Yaml
   echo "Deploy Yaml"
-  kubectl apply -f pod-cpu.yaml  
+  kubectl apply -f pod-mem.yaml  
 }
 
 
@@ -145,3 +150,5 @@ funcCreateYaml
 echo ""
 echo "Deploy Yaml"
 funcDeployYaml
+echo ""
+echo "END!!!"
