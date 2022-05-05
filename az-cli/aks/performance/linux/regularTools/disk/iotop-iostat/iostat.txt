@@ -1,0 +1,5 @@
+iostat --human -d 2
+iostat --human -d 2 sda
+iostat --human -d 2 -N sda
+iostat --human -d 2 -N 
+iostat --human -d 2 -m 
