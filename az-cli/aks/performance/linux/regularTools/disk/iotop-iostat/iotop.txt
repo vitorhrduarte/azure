@@ -1,0 +1,5 @@
+iotop -o -t -k -q -d 1
+iotop
+iotop -h
+iotop -o -t -k -d 1
+iotop -o -t -d 1
