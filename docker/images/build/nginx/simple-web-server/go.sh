@@ -102,6 +102,19 @@ spec:
   nodeSelector:
     kubernetes.io/os: linux
     kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-fake-msft-site
+spec:
+  selector:
+    purpose: fake-msft-site
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
 EOF
   else
 cat <<EOF > pod-nginx.yaml
@@ -117,6 +130,19 @@ spec:
     name: microsoft-site
   nodeSelector:
     kubernetes.io/os: linux
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-fake-msft-site
+spec:
+  selector:
+    purpose: fake-msft-site
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
 EOF
   fi
 }
