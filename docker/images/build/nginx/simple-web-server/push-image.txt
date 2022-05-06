@@ -1,0 +1,1 @@
+docker push typeoneg/nginx-web-server:v1.0
