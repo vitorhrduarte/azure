@@ -1,0 +1,1 @@
+docker image build -t typeoneg/nginx-web-server:v1.0 -f build-simple-web-server-nginx .
