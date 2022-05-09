@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-mtu-update
+  namespace: kube-system
+  labels:
+    k8s-app: node-mtu-update
+spec:
+  selector:
+    matchLabels:
+      name: node-mtu-update
+  template:
+    metadata:
+      labels:
+        name: node-mtu-update
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: node-mtu-update
+        image: ubuntu:18.04
+        securityContext:
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN"]
+        args: ["/bin/sh", "-c", "apt-get update && apt-get install -y iproute2; while [ true ]; do echo Setting MTU to $MTU on interface $INTERFACE; ip link set dev $INTERFACE mtu $MTU; sleep $SLEEP_SECONDS; done"]
+        env:
+        - name: MTU
+          value: "1400"
+        - name: INTERFACE
+          value: "azure0"
+        - name: SLEEP_SECONDS
+          value: "5"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi        
+      terminationGracePeriodSeconds: 30
