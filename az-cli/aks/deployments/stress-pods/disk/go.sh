@@ -7,7 +7,10 @@ cat << EOF
 Usage: 
 
 bash go.sh --help/-h  [for help]
-bash go.sh -p/--pod <pod-name> -t/--tag <nodepool-instance-tag-namep-host-name> -s/storage <pvc-size> 
+bash go.sh -p/--pod <pod-name> -t/--tag <nodepool-instance-tag-namep-host-name> -s/storage <pvc-size-in-Gi> 
+
+IMPORTANT: For PVC they are being dynamically created.
+
 
 Install Pre-requisites JQ
 
@@ -18,7 +21,8 @@ Install Pre-requisites JQ
 -t, -tag,           --tag                   Define, if we want, if defined, deploy pod in a
                                             specific nodepool instance          
 
--s, -stor           --storage               Define, if we want, storage class size
+-s, -stor           --storage               Define, if we want, storage class size in GI. Example
+                                            10Gi
 
 EOF
 }
@@ -62,9 +66,11 @@ funcHasPvc () {
   
   if [[ -z "$PVC_DYN_SIZE" ]];
   then 
-    HAS_PVC=1
+    echo "No PVC desired"
+    HAS_PVC="0"
   else
-    HAS_PV=0
+    echo "Has PVC"
+    HAS_PVC="1"
   fi
 }
 
@@ -104,29 +110,9 @@ funcCreateYaml () {
   ## Create Yaml to be Deployed
   echo "Create Yaml to be Deployed"
   
-  if [[ "$HAS_HOSTNAME" == "1" ]] && [[ "$HAS_PVC" == "0"]];
-  then
-cat <<EOF > pod-disk.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: $POD_NAME
-  labels:
-    purpose: perf
-spec:
-  containers:
-  - image: typeoneg/stresstest-pod:v1 
-    name: cpu-perf
-    command: [ "sh", "-c", "sleep infinity" ]
-  nodeSelector:
-    kubernetes.io/os: linux
-    kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
-EOF
-  elif [[ "$HAS_HOSTNAME" == "1" ]] && [[ "$HAS_PVC" == "1"]];
+  if [[ "$HAS_HOSTNAME" == "1" ]] && [[ "$HAS_PVC" == "1" ]];
   then 
 
-  funcDeployPvc 
-
 cat <<EOF > pod-disk.yaml
 apiVersion: v1
 kind: Pod
@@ -142,7 +128,7 @@ spec:
     volumeMounts:
     - mountPath: "/mnt/azure"
       name: volume
-    volumes:
+  volumes:
     - name: volume
       persistentVolumeClaim:
         claimName: azure-managed-disk
@@ -150,27 +136,9 @@ spec:
     kubernetes.io/os: linux
     kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
 EOF
-  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "0"]];
-  then
-cat <<EOF > pod-disk.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: $POD_NAME
-  labels:
-    purpose: perf
-spec:
-  containers:
-  - image: typeoneg/stresstest-pod:v1 
-    name: cpu-perf
-    command: [ "sh", "-c", "sleep infinity" ]
-  nodeSelector:
-    kubernetes.io/os: linux
-EOF
-  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "1"]]; 
-  then
-
-  funcDeployPvc
+    
+  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "1" ]]; 
+  then 
 
 cat <<EOF > pod-disk.yaml
 apiVersion: v1
@@ -187,12 +155,32 @@ spec:
     volumeMounts:
     - mountPath: "/mnt/azure"
       name: volume
-    volumes:
+  volumes:
     - name: volume
       persistentVolumeClaim:
         claimName: azure-managed-disk
-EOF 
-fi
+EOF
+
+  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "0" ]]; 
+  then 
+
+cat <<EOF > pod-disk.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: $POD_NAME
+  labels:
+    purpose: perf
+spec:
+  containers:
+  - image: typeoneg/stresstest-pod:v1 
+    name: cpu-perf
+    command: [ "sh", "-c", "sleep infinity" ]
+EOF
+
+  else
+    echo "Nothing was done...." 
+  fi
 }
 
 
@@ -221,10 +209,11 @@ spec:
   storageClassName: managed-premium
   resources:
     requests:
-      storage: $PVC_DYN_SIZEGi
+      storage: $PVC_DYN_SIZE
 EOF
   
   ## Apply PVC
+  echo "Apply PVC"
   kubectl apply -f pod-pvc.yaml
 
 }
@@ -238,6 +227,12 @@ EOF
 echo ""
 echo "Process PVC if Any"
 funcHasPvc 
+echo ""
+echo "Deploy PVC if applicable"
+if [[ "$HAS_PVC" == "1" ]];
+then
+   funcDeployPvc
+fi
 echo ""
 echo "Process TAGS if Any"
 funcHasTags 
