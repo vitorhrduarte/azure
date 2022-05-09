@@ -1,0 +1,1 @@
+read -p "Pod PID: " podrpid && ps --pid $podrpid u | grep -Po "(?<=-id )[0-9,a-z]+" | xargs -I {} crictl pods -id {} -o json | jq -r '(["PodName","PodNameSpace","PodStatus"] | (., map(length*"-"))), (.items[] | [ .metadata.name, .metadata.namespace, .state ]) | @tsv' | column -t
