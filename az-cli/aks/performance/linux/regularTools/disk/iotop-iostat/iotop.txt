@@ -1,3 +1,13 @@
+## Sample flags to run iotop
+iotop -o -b -t -q -P
+
+
+## Run with append info
+iotop -o -b -t -q -P -a
+
+
+
+
 iotop -o -t -k -q -d 1
 iotop
 iotop -h
