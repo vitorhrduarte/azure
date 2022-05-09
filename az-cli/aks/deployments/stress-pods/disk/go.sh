@@ -18,7 +18,7 @@ Install Pre-requisites JQ
 -t, -tag,           --tag                   Define, if we want, if defined, deploy pod in a
                                             specific nodepool instance          
 
--s, -stor           --storage               Define storage class size
+-s, -stor           --storage               Define, if we want, storage class size
 
 EOF
 }
@@ -56,6 +56,17 @@ esac
 shift
 done
 
+funcHasPvc () {
+  ## Check if PVC is desired
+  echo "Check if PVC is desired"
+  
+  if [[ -z "$PVC_DYN_SIZE" ]];
+  then 
+    HAS_PVC=1
+  else
+    HAS_PV=0
+  fi
+}
 
 
 funcHasTags () {
@@ -93,9 +104,9 @@ funcCreateYaml () {
   ## Create Yaml to be Deployed
   echo "Create Yaml to be Deployed"
   
-  if [[ "$HAS_HOSTNAME" == "1" ]];
+  if [[ "$HAS_HOSTNAME" == "1" ]] && [[ "$HAS_PVC" == "0"]];
   then
-cat <<EOF > pod-cpu.yaml
+cat <<EOF > pod-disk.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -111,8 +122,37 @@ spec:
     kubernetes.io/os: linux
     kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
 EOF
-  else
-cat <<EOF > pod-cpu.yaml
+  elif [[ "$HAS_HOSTNAME" == "1" ]] && [[ "$HAS_PVC" == "1"]];
+  then 
+
+  funcDeployPvc 
+
+cat <<EOF > pod-disk.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: $POD_NAME
+  labels:
+    purpose: perf
+spec:
+  containers:
+  - image: typeoneg/stresstest-pod:v1 
+    name: cpu-perf
+    command: [ "sh", "-c", "sleep infinity" ]
+    volumeMounts:
+    - mountPath: "/mnt/azure"
+      name: volume
+    volumes:
+    - name: volume
+      persistentVolumeClaim:
+        claimName: azure-managed-disk
+  nodeSelector:
+    kubernetes.io/os: linux
+    kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
+EOF
+  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "0"]];
+  then
+cat <<EOF > pod-disk.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -127,14 +167,66 @@ spec:
   nodeSelector:
     kubernetes.io/os: linux
 EOF
-  fi
+  elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "1"]]; 
+  then
+
+  funcDeployPvc
+
+cat <<EOF > pod-disk.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: $POD_NAME
+  labels:
+    purpose: perf
+spec:
+  containers:
+  - image: typeoneg/stresstest-pod:v1 
+    name: cpu-perf
+    command: [ "sh", "-c", "sleep infinity" ]
+    volumeMounts:
+    - mountPath: "/mnt/azure"
+      name: volume
+    volumes:
+    - name: volume
+      persistentVolumeClaim:
+        claimName: azure-managed-disk
+EOF 
+fi
 }
 
 
 funcDeployYaml () {
   ## Deploy Yaml
   echo "Deploy Yaml"
-  kubectl apply -f pod-cpu.yaml  
+  kubectl apply -f pod-disk.yaml  
+}
+
+
+funcDeployPvc () {
+  ## Remove Existent yaml
+  echo "Remove Existent yaml"
+  rm -rf pod-pvc.yaml
+
+  ## Define PVC
+  echo "Define PVC"
+cat <<EOF > pod-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-managed-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: $PVC_DYN_SIZEGi
+EOF
+  
+  ## Apply PVC
+  kubectl apply -f pod-pvc.yaml
+
 }
 
 
@@ -143,7 +235,9 @@ funcDeployYaml () {
 ## Core
 ##
 ###############################
-
+echo ""
+echo "Process PVC if Any"
+funcHasPvc 
 echo ""
 echo "Process TAGS if Any"
 funcHasTags 
