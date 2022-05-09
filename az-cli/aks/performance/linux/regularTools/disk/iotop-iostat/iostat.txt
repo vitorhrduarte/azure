@@ -1,3 +1,11 @@
+## Get generic iostat with extended info
+iostat -x -d 1 -m -t
+
+## Get Same but only for a device
+iostat -x -d 1 -m -t -p sdc
+
+
+
 iostat --human -d 2
 iostat --human -d 2 sda
 iostat --human -d 2 -N sda
