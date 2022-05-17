@@ -22,6 +22,7 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 echo "Deploy IngController"
 helm install nginx-ingress ingress-nginx/ingress-nginx \
     --namespace ingress-basic \
+    -f internal-ingress.yaml \
     --set controller.replicaCount=2 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
