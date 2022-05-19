@@ -1,6 +1,8 @@
 #!/bin/bash
 
-
+## PVC Random ID
+PVC_RANDOM_ID=$(echo $RANDOM | md5sum | head -c 20)
+PV_ID="az-pvc-$PVC_RANDOM_ID"
 
 showHelp() {
 cat << EOF  
@@ -131,7 +133,7 @@ spec:
   volumes:
     - name: volume
       persistentVolumeClaim:
-        claimName: azure-managed-disk
+        claimName: $PV_ID
   nodeSelector:
     kubernetes.io/os: linux
     kubernetes.io/hostname: $NP_INSTANCE_TAG_NAME
@@ -158,7 +160,7 @@ spec:
   volumes:
     - name: volume
       persistentVolumeClaim:
-        claimName: azure-managed-disk
+        claimName: $PV_ID
 EOF
 
   elif [[ "$HAS_HOSTNAME" == "0" ]] && [[ "$HAS_PVC" == "0" ]]; 
@@ -202,7 +204,7 @@ cat <<EOF > pod-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: azure-managed-disk
+  name: $PV_ID
 spec:
   accessModes:
   - ReadWriteOnce
