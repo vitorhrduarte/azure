@@ -6,7 +6,7 @@ APPGTW_LOCATION="westeurope"                    ## Existing AKS Location
 APPGTW_MAIN_VNET_NAME="vnet-aks-agic"           ## Existing Main Vnet
 APPGTW_ADDRESS_PREFIX="10.5.0.0/16"             ## Existing Main Vnet Cidr
 APPGTW_SUBNET_NAME="snet-appgtw"
-APPGTW_SUBNET_PREFIX="10.5.2.0/24"
+APPGTW_SUBNET_PREFIX="10.5.10.0/24"
 
 ## Deploy AppGtw
 APPGTW_NAME="evangelionappgtw"
