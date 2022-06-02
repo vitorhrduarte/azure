@@ -1,0 +1,1 @@
+read -p "Input AKS RG Name: " ansaksrg && read -p "Input AKS Name: " ansaksname && az aks update --resource-group ansaksrg --name $ansaksname --enable-pod-identity --debug
