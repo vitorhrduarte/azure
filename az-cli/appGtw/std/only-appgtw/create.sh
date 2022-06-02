@@ -34,3 +34,4 @@ az network application-gateway create \
   --priority 1 \
   --debug
 
+echo "END"
