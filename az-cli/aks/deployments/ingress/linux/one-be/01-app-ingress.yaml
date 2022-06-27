@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ing-controller
@@ -15,10 +15,14 @@ spec:
       - path: /app00(/|$)(.*)
         pathType: Prefix
         backend:
-          serviceName: app00
-          servicePort: 80
+          service:
+            name: app00
+            port: 
+              number: 80
       - path: /(.*)
         pathType: Prefix
         backend:
-          serviceName: app00
-          servicePort: 80
+          service:
+            name: app00
+            port:
+              number: 80
