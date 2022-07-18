@@ -59,7 +59,9 @@ if [ -f "$ORIGIN_FILE" ];
 then
   if [ ! -z "$SUFFIX" ];
   then
+    rm -rf $DESTINATION_FILE
     cat $ORIGIN_FILE | awk -v suf="$SUFFIX" '{print $0""suf}' >> $DESTINATION_FILE
+    rm -rf $ORIGIN_FILE
   else
     echo "Suffix is empty!!!"
     exit
