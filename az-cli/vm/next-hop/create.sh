@@ -11,6 +11,25 @@ az group create \
   --debug
 
 
+## Create VNet and Subnet
+echo "Create Vnet for Jump Server"
+az network vnet create \
+  --resource-group $VM_VNET_RG \
+  --name $VM_VNET_NAME \
+  --address-prefix $VM_VNET_CIDR \
+  --debug
+
+
+## Create AKS Subnet
+echo "Create Subnet for AKS Cluster"
+az network vnet subnet create \
+  --resource-group $VM_VNET_RG \
+  --vnet-name $VM_VNET_NAME \
+  --name $AKS_SNET_NAME \
+  --address-prefixes $AKS_SNET_CIDR \
+  --debug
+
+
 ## VM Server Creation
 echo "Create VM Server Subnet"
 az network vnet subnet create \
@@ -21,22 +40,6 @@ az network vnet subnet create \
   --debug
 
 
-## VM NSG Create
-echo "Create NSG"
-az network nsg create \
-  --resource-group $VM_VNET_RG \
-  --name $VM_NSG_NAME \
-  --debug
-
-
-## Public IP Create
-echo "Create Public IP"
-az network public-ip create \
-  --name $VM_PUBLIC_IP_NAME \
-  --resource-group $VM_VNET_RG \
-  --debug
-
-
 ## VM Nic Create
 echo "Create VM Nic"
 az network nic create \
@@ -44,27 +47,17 @@ az network nic create \
   --vnet-name $VM_VNET_NAME \
   --subnet $VM_SNET_NAME \
   --name $VM_NIC_NAME \
-  --network-security-group $VM_NSG_NAME \
   --debug 
 
 
-## Attach Public IP to VM NIC
-echo "Attach Public IP to VM NIC"
-az network nic ip-config update \
-  --name $VM_DEFAULT_IP_CONFIG \
-  --nic-name $VM_NIC_NAME \
+## VM Nic 2 Create
+echo "Create VM Nic 2"
+az network nic create \
   --resource-group $VM_VNET_RG \
-  --public-ip-address $VM_PUBLIC_IP_NAME \
-  --debug
-
-
-## Update NSG in VM Subnet
-echo "Update NSG in VM Subnet"
-az network vnet subnet update \
-  --resource-group $VM_VNET_RG \
-  --name $VM_SNET_NAME \
   --vnet-name $VM_VNET_NAME \
-  --network-security-group $VM_NSG_NAME \
+  --subnet $AKS_SNET_NAME \
+  --name $VM_NIC_NAME_2 \
+  --ip-forwarding true \
   --debug
 
 
@@ -82,69 +75,39 @@ az vm create \
   --storage-sku $VM_STORAGE_SKU \
   --os-disk-size-gb $VM_OS_DISK_SIZE \
   --os-disk-name $VM_OS_DISK_NAME \
-  --nics $VM_NIC_NAME \
+  --nics $VM_NIC_NAME $VM_NIC_NAME_2 \
   --tags $VM_TAGS \
   --debug
 
 
-## Waiting for PIP
-VM_PUBLIC_IP=$(az network public-ip list \
+## Create Route Table
+echo "Create Route Table"
+az network route-table create \
+  --name $VNET_ROUTE_TABLE_NAME \
   --resource-group $VM_VNET_RG \
-  --output json | jq -r ".[] | select (.name==\"$VM_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv" | wc -l)
+  --location $VM_VNET_LOCATION \
+  --debug
 
-while [[ "$VM_PUBLIC_IP" = "0" ]]
-do
-   echo "not good to go: " $VM_PUBLIC_IP
-   echo "Sleeping for 2s..."
-   sleep 2s
-   VM_PUBLIC_IP=$(az network public-ip list \
-     --resource-group $VM_VNET_RG \
-     --output json | jq -r ".[] | select (.name==\"$VM_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv" | wc -l)
-done
 
-VM_PUBLIC_IP=$(az network public-ip list \
+## Create Route
+echo "Create Route"
+az network route-table route create \
+  --name $VNET_ROUTE_TABLE_ROUTE_NAME \
+  --next-hop-type VirtualAppliance \
+  --address-prefix "0.0.0.0/0" \
+  --route-table-name $VNET_ROUTE_TABLE_NAME \
+  --next-hop-ip-address $VNET_NVA_IP \
   --resource-group $VM_VNET_RG \
-  --output json | jq -r ".[] | select (.name==\"$VM_PUBLIC_IP_NAME\") | [ .ipAddress] | @tsv")
+  --debug
 
 
-## Allow SSH from local ISP
-echo "Update VM NSG to allow SSH"
-az network nsg rule create \
-  --nsg-name $VM_NSG_NAME \
+## Create Route Association
+echo "Create Route Association"
+az network vnet subnet update \
+  --vnet-name $VM_VNET_NAME \
+  --route-table $VNET_ROUTE_TABLE_NAME \
+  --name $AKS_SNET_NAME \
   --resource-group $VM_VNET_RG \
-  --name ssh_allow \
-  --priority 100 \
-  --source-address-prefixes $VM_MY_ISP_IP \
-  --source-port-ranges '*' \
-  --destination-address-prefixes $VM_PRIV_IP \
-  --destination-port-ranges 22 \
-  --access Allow \
-  --protocol Tcp \
-  --description "Allow from MY ISP IP"
+  --debug
 
-
-## Input Key Fingerprint
-echo "Input Key Fingerprint" 
-FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
-
-while [[ "$FINGER_PRINT_CHECK" = "0" ]]
-do
-    echo "not good to go: $FINGER_PRINT_CHECK"
-    echo "Sleeping for 5s..."
-    sleep 5
-    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP | wc -l)
-done
-
-
-echo "Good to go with Input Key Fingerprint"
-ssh-keygen -F $VM_PUBLIC_IP >/dev/null | ssh-keyscan -H $VM_PUBLIC_IP >> ~/.ssh/known_hosts
-
-
-## Update Server VM
-echo "Update Server VM"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt update
-
-## Upgrade Server VM
-echo "Upgrade Server VM"
-ssh -i $SSH_PRIV_KEY $GENERIC_ADMIN_USERNAME@$VM_PUBLIC_IP sudo apt upgrade -y
 
