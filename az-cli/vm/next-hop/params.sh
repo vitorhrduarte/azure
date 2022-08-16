@@ -1,26 +1,29 @@
 ## Running Options
-CREATE_SRV="1"
-CREATE_NVA="1"
-VNET_PREFIX="10.6"
+NVA_SETUP=0         # This should be 1 if and only if the machine have access to the NVA
+NVA_CREATION=1      # This should be 1 by default. 
+                    # To have 1 in setup and 1 in creation then the running machine need to ahve access to the NVA
+
+VNET_PREFIX="10.2"                                                  # Define the Vnet Prefix
+AKS_CLUSTER_NAME="aks-udr"                                          # Define the AKS Cluster Name (it will be deployed with other way)
+VNET_ROUTE_TABLE_NAME="main-rt-"$AKS_CLUSTER_NAME                   # Define main Route Table
+VNET_ROUTE_TABLE_ROUTE_NAME="main-route-"$AKS_CLUSTER_NAME          # Define main Route Table Route name
+VNET_NVA_IP=$VNET_PREFIX".0.4"                                      # Define NVA (Linux machine in this case) IP i Vnet Of the AKS Cluster
 
 
 ## Core Networking
-VM_VNET_RG="rg-aks-24"
-VM_VNET_NAME="vnet-aks-24"
+VM_VNET_RG="rg-"$AKS_CLUSTER_NAME
+VM_VNET_NAME="vnet-"$AKS_CLUSTER_NAME
 VM_VNET_LOCATION="westeurope"
 VM_VNET_CIDR=$VNET_PREFIX".0.0/16"
+
 
 ## VM Specific Networking
 VM_SNET_NAME="snet-nva"
 VM_SNET_CIDR=$VNET_PREFIX".100.0/28"
 VM_PRIV_IP=$VNET_PREFIX".100.4/32"
+AKS_SNET_NAME="snet-"$AKS_CLUSTER_NAME
+AKS_SNET_CIDR=$VNET_PREFIX".0.0/23"
 
-## Local ISP PIP
-VM_MY_ISP_IP=$(curl -s -4 ifconfig.io)
-
-## Public IP Name
-VM_PUBLIC_IP_NAME="nvasrvpip"
-VM_DEFAULT_IP_CONFIG="ipconfig1"
 
 ## VM SSH Client
 VM_RG_LOCATION=$AKS_MAIN_VNET_LOCATION
@@ -36,7 +39,7 @@ VM_SIZE="Standard_D2s_v3"
 VM_STORAGE_SKU="Standard_LRS"
 VM_OS_DISK_SIZE="40"
 VM_OS_DISK_NAME="$VM_NAME""_disk_01"
-VM_NSG_NAME="$VM_NAME""_nsg"
-VM_NIC_NAME="$VM_NAME""nic01"
+VM_NIC_NAME="$VM_NAME""nic01"           # Primary NIC
+VM_NIC_NAME_2="$VM_NAME""nic02"         # Second NIC with IP Forwarding (with IP in the subnet of AKS)
 VM_TAGS="purpose=nva-server"
 
