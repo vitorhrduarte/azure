@@ -1,6 +1,6 @@
 ## Running Options
-NVA_SETUP=0         # This should be 1 if and only if the machine have access to the NVA
-NVA_CREATION=1      # This should be 1 by default. 
+NVA_SETUP=1         # This should be 1 if and only if the machine have access to the NVA
+NVA_CREATION=0      # This should be 1 by default. 
                     # To have 1 in setup and 1 in creation then the running machine need to ahve access to the NVA
 
 VNET_PREFIX="10.2"                                                  # Define the Vnet Prefix
@@ -21,8 +21,12 @@ VM_VNET_CIDR=$VNET_PREFIX".0.0/16"
 VM_SNET_NAME="snet-nva"
 VM_SNET_CIDR=$VNET_PREFIX".100.0/28"
 VM_PRIV_IP=$VNET_PREFIX".100.4/32"
+VM_PRIV_IP_NOCIDR=$VNET_PREFIX".100.4"
 AKS_SNET_NAME="snet-"$AKS_CLUSTER_NAME
 AKS_SNET_CIDR=$VNET_PREFIX".0.0/23"
+
+
+## << IMPORTANT >>
 AKS_SNET_GTW_IP=$VNET_PREFIX".0.1"     	# This IP depends on the previous definition SO BE WARE of IT
 					# Should be the fisrt available IP, example:
 					# CIDR 10.2.0.0/23, GTW IP= 10.2.0.1
