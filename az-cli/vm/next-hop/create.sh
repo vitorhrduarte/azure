@@ -3,6 +3,9 @@ set -e
 . ./params.sh
 
 
+if [[ "$NVA_CREATION" == "1" ]];
+then	
+
 ## Create RG
 echo "Create RG"
 az group create \
@@ -110,4 +113,50 @@ az network vnet subnet update \
   --resource-group $VM_VNET_RG \
   --debug
 
+fi
 
+if [[ "$NVA_SETUP" == "1" ]];
+then
+
+
+## Install Net Tools
+echo "Install Net Tools"
+ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo apt install net-tools -y"
+
+## Enable IP Forwarding
+echo "Enable IP Forwarding"
+ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo sed -i 's/#net\.ipv4\.ip_forward=1/net\.ipv4\.ip_forward=1/g' /etc/sysctl.conf"
+
+
+## Enable the Routing
+echo "Enable the Routing"
+ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+
+
+## Install Software to save IPTables on reboot
+echo "Install software to save iptables on reboot"
+ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo iptables-save | sudo tee -a /etc/iptables/rules.v4"
+
+
+## Add the Routes (eth1 = private, eth0 = internet)
+#echo "Add Route to NIC's"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 10.2.0.1 dev eth1"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add $AKS_SNET_CIDR via 10.2.0.1 dev eth1"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.63.129.16 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 169.254.169.254 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
+
+## Force IPTables and Routing on Boot
+echo "Force IPTables and Routing on Boot"
+#echo '#!/bin/bash
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo /sbin/iptables-restore < /etc/iptables/rules.v4"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 10.2.0.0/23 via 10.2.0.1 dev eth1"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.63.129.16 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.254.129.254 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4 | sudo tee -a /etc/rc.local"
+#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo chmod +x /etc/rc.local"
+
+## Rebooting
+echo "Rebooting"
+ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo reboot"
+
+fi
