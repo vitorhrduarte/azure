@@ -23,7 +23,9 @@ VM_SNET_CIDR=$VNET_PREFIX".100.0/28"
 VM_PRIV_IP=$VNET_PREFIX".100.4/32"
 AKS_SNET_NAME="snet-"$AKS_CLUSTER_NAME
 AKS_SNET_CIDR=$VNET_PREFIX".0.0/23"
-
+AKS_SNET_GTW_IP=$VNET_PREFIX".0.1"     	# This IP depends on the previous definition SO BE WARE of IT
+					# Should be the fisrt available IP, example:
+					# CIDR 10.2.0.0/23, GTW IP= 10.2.0.1
 
 ## VM SSH Client
 VM_RG_LOCATION=$AKS_MAIN_VNET_LOCATION
