@@ -2,6 +2,49 @@
 set -e
 . ./params.sh
 
+##############################
+#  Functions #################
+##############################
+
+
+## Function to Peer Vnet's
+funcPeerVnet () {
+
+  ## Get Vnet's ID's
+  echo "Getting Vnet's ID's"
+  ORIGIN_JS_VNET_ID=$(az network vnet list -o json | jq -r ".[] | select( .name == \"$JS_VNET_NAME\" ) | [ .id ] | @tsv" | column -t)
+  echo "$JS_VNET_NAME ID: $ORIGIN_JS_VNET_ID"
+  DESTINATION_VNET_ID=$(az network vnet list -o json | jq -r ".[] | select( .name == \"$DEST_VNET_NAME\" ) | [ .id ] | @tsv" | column -t)
+  echo "$DEST_VNET_NAME ID: $DESTINATION_VNET_ID"
+
+  ## Peering Vnets
+  echo "Peering $JS_VNET_NAME-To-$DEST_VNET_NAME"
+  az network vnet peering create \
+    --name "$JS_VNET_NAME-To-$DEST_VNET_NAME" \
+    --resource-group $JS_VNET_RG \
+    --vnet-name $JS_VNET_NAME \
+    --remote-vnet $DESTINATION_VNET_ID \
+    --allow-vnet-access \
+    --debug
+
+  echo "Peering $DEST_VNET_NAME-To-$JS_VNET_NAME"
+  az network vnet peering create \
+    --name  "$DEST_VNET_NAME-To-$JS_VNET_NAME" \
+    --resource-group $DEST_VNET_RG \
+    --vnet-name $DEST_VNET_NAME \
+    --remote-vnet $ORIGIN_JS_VNET_ID \
+    --allow-vnet-access \
+    --debug
+
+}
+
+
+
+###################################
+# Main ############################
+###################################
+
+
 
 if [[ "$NVA_CREATION" == "1" ]];
 then	
@@ -112,6 +155,10 @@ az network vnet subnet update \
   --name $AKS_SNET_NAME \
   --resource-group $VM_VNET_RG \
   --debug
+
+## Peer the Vnet
+echo "Peer the Vnet"
+funcPeerVnet
 
 fi
 
