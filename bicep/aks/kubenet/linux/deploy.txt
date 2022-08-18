@@ -1,0 +1,1 @@
+az deployment sub create --template-file ./aks-deployment.bicep --location westeurope
