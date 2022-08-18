@@ -166,6 +166,22 @@ if [[ "$NVA_SETUP" == "1" ]];
 then
 
 
+## Input Key Fingerprint
+echo "Input Key Fingerprint" 
+FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PRIV_IP_NOCIDR >/dev/null | ssh-keyscan -H $VM_PRIV_IP_NOCIDR | wc -l)
+
+while [[ "$FINGER_PRINT_CHECK" = "0" ]]
+do
+    echo "Not Good to GO: $FINGER_PRINT_CHECK"
+    echo "Sleeping for 5s..."
+    sleep 5
+    FINGER_PRINT_CHECK=$(ssh-keygen -F $VM_PRIV_IP_NOCIDR >/dev/null | ssh-keyscan -H $VM_PRIV_IP_NOCIDR | wc -l)
+done
+
+echo "Goood to go with Input Key Fingerprint"
+ssh-keygen -F $VM_PRIV_IP_NOCIDR >/dev/null | ssh-keyscan -H $VM_PRIV_IP_NOCIDR >> ~/.ssh/known_hosts
+
+
 ## Install Net Tools
 echo "Install Net Tools"
 ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo apt install net-tools -y"
