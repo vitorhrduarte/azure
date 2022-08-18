@@ -31,6 +31,13 @@ AKS_SNET_GTW_IP=$VNET_PREFIX".0.1"     	# This IP depends on the previous defini
 					# Should be the fisrt available IP, example:
 					# CIDR 10.2.0.0/23, GTW IP= 10.2.0.1
 
+
+
+JS_VNET_NAME="vnet-vm-jpsrv"
+DEST_VNET_NAME=$VM_VNET_NAME
+JS_VNET_RG="rg-vm-jpsrv"
+DEST_VNET_RG=$VM_VNET_RG
+
 ## VM SSH Client
 VM_RG_LOCATION=$AKS_MAIN_VNET_LOCATION
 VM_AUTH_TYPE="ssh"
