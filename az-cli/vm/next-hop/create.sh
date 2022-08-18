@@ -199,24 +199,7 @@ ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo iptables -t nat -A POSTROUT
 ## Install Software to save IPTables on reboot
 echo "Install software to save iptables on reboot"
 ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo iptables-save | sudo tee -a /etc/iptables/rules.v4"
 
-
-## Add the Routes (eth1 = private, eth0 = internet)
-#echo "Add Route to NIC's"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 10.2.0.1 dev eth1"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add $AKS_SNET_CIDR via 10.2.0.1 dev eth1"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.63.129.16 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 169.254.169.254 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
-
-## Force IPTables and Routing on Boot
-echo "Force IPTables and Routing on Boot"
-#echo '#!/bin/bash
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo /sbin/iptables-restore < /etc/iptables/rules.v4"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 10.2.0.0/23 via 10.2.0.1 dev eth1"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.63.129.16 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo ip route add 168.254.129.254 via 10.2.0.1 dev eth1 proto dhcp src 10.2.0.4 | sudo tee -a /etc/rc.local"
-#ssh $GENERIC_ADMIN_USERNAME@$VM_PRIV_IP_NOCIDR "sudo chmod +x /etc/rc.local"
 
 ## Rebooting
 echo "Rebooting"
