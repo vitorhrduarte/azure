@@ -1,6 +1,6 @@
 ## Running Options
 NVA_SETUP=1         # This should be 1 if and only if the machine have access to the NVA
-NVA_CREATION=0      # This should be 1 by default. 
+NVA_CREATION=1      # This should be 1 by default. 
                     # To have 1 in setup and 1 in creation then the running machine need to ahve access to the NVA
 
 VNET_PREFIX="10.2"                                                  # Define the Vnet Prefix
@@ -32,7 +32,7 @@ AKS_SNET_GTW_IP=$VNET_PREFIX".0.1"     	# This IP depends on the previous defini
 					# CIDR 10.2.0.0/23, GTW IP= 10.2.0.1
 
 
-
+## Peering Definition
 JS_VNET_NAME="vnet-vm-jpsrv"
 DEST_VNET_NAME=$VM_VNET_NAME
 JS_VNET_RG="rg-vm-jpsrv"
