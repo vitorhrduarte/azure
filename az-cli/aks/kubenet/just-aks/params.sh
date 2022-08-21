@@ -1,14 +1,14 @@
 ## AKS Settings more prone to be changed
-AKS_PURPOSE="lab03"
+AKS_PURPOSE="kube01"
 AKS_LOCATION="westeurope"
 AKS_VERSION="1.21.9"
 
 
 ## AKS Main definitions
-AKS_HAS_AZURE_MONITOR="1"
-AKS_HAS_AUTO_SCALER="1"
+AKS_HAS_AZURE_MONITOR="0"
+AKS_HAS_AUTO_SCALER="0"
 AKS_HAS_MANAGED_IDENTITY="1"
-AKS_HAS_2ND_NP="1"
+AKS_HAS_2ND_NP="0"
 
 
 ## AKS NP Settings
