@@ -10,17 +10,25 @@ az group create \
   --tags env=lab \
   --debug
 
-## Create  VNet and Subnet
-echo "Create Vnet and Subnet for AKS Cluster"
+## Create  VNet for AKS Cluster
+echo "Create Vnet for AKS Cluster"
 az network vnet create \
   --resource-group $AKS_RG_NAME \
   --name $AKS_VNET_NAME \
-  --address-prefix $AKS_VNET_CIDR \
-  --subnet-name $AKS_VNET_SNET_NAME \
-  --subnet-prefix $AKS_VNET_SNET_CIDR \
+  --address-prefixes $AKS_VNET_CIDR \
   --debug
 
-## get subnet info
+## Create Subnet
+echo "Create Subnet"
+az network vnet subnet create \
+  --resource-group $AKS_RG_NAME \
+  --address-prefixes $AKS_VNET_SNET_CIDR \
+  --name $AKS_VNET_SNET_NAME \
+  --vnet-name $AKS_VNET_NAME \
+  --debug
+
+
+## Get SubNet info
 echo "Getting Subnet ID"
 AKS_SNET_ID=$(az network vnet subnet show \
   --resource-group $AKS_RG_NAME \
@@ -38,13 +46,13 @@ if [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENTIT
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --pod-cidr $AKS_POD_CIDR \
@@ -70,13 +78,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --pod-cidr $AKS_POD_CIDR \
@@ -103,13 +111,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 1 && $HAS_MANAGED_IDENT
   --service-principal $SP \
   --client-secret $SPPASS \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --pod-cidr $AKS_POD_CIDR \
@@ -134,13 +142,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --service-principal $SP \
   --client-secret $SPPASS \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --pod-cidr $AKS_POD_CIDR \
@@ -160,13 +168,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -187,13 +195,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 0 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -217,13 +225,13 @@ elif [[ $HAS_AZURE_MONITOR -eq 1 && $HAS_AUTO_SCALER -eq 0 && $HAS_MANAGED_IDENT
   --service-principal $SP \
   --client-secret $SPPASS \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -245,13 +253,13 @@ else
   --service-principal $SP \
   --client-secret $SPPASS \
   --node-count $AKS_SYSNP_COUNT \
-  --node-vm-size $AKS_SYSNP_DISK_SIZE \
+  --node-vm-size $AKS_SYSNP_NODE_SIZE \
   --location $AKS_LOCATION \
   --load-balancer-sku standard \
   --vnet-subnet-id $AKS_SNET_ID \
-  --vm-set-type $AKS_NP_VMSS_SET_TYPE \
+  --vm-set-type $AKS_NP_VM_SET_TYPE \
   --kubernetes-version $AKS_VERSION \
-  --network-plugin $CNI_PLUGIN \
+  --network-plugin $AKS_NETWORK_PLUGIN \
   --service-cidr $AKS_CLUSTER_SRV_CIDR \
   --dns-service-ip $AKS_CLUSTER_DNS \
   --docker-bridge-address $AKS_CLUSTER_DOCKER_BRIDGE \
@@ -265,22 +273,22 @@ else
 fi
 
 ## Logic for VMASS only
-if [[ "$AKS_NP_VMSS_SET_TYPE" == "AvailabilitySet" ]]; then
+if [[ "$AKS_NP_VM_SET_TYPE" == "AvailabilitySet" ]]; then
   echo "Skip second Nodepool - VMAS dont have it"
 else
-  ## Add User nodepooll
+  ## Add User Nodepool
   echo 'Add Node pool type User'
   az aks nodepool add \
     --resource-group $AKS_RG_NAME \
     --name usernpool \
     --cluster-name $AKS_CLUSTER_NAME \
     --node-osdisk-type Ephemeral \
-    --node-osdisk-size $USER_NODE_DISK_SIZE \
+    --node-osdisk-size $AKS_USRNP_DISK_SIZE \
     --kubernetes-version $AKS_VERSION \
     --tags "env=userpool" \
     --mode User \
-    --node-count $USER_NODE_COUNT \
-    --node-vm-size $USER_NODE_SIZE \
+    --node-count $AKS_USRNP_COUNT \
+    --node-vm-size $AKS_USRNP_NODE_SIZE \
     --debug
 fi
 
