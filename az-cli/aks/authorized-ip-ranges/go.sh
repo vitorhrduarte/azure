@@ -1,7 +1,57 @@
 ##!/usr/bin/env bash
 
-AKS_NAME="aks-kube01"
-AKS_RG_NAME="rg-$AKS_NAME"
+
+
+showHelp() {
+cat << EOF  
+Purpose:
+  Add current VM PIP to the Authorized IP Ranges for desired AKS Clustee
+
+Usage: 
+
+bash go.sh --help/-h  [for help]
+bash go.sh -n/--name <aks name> -r/--rgroup <aks resource group>
+
+Install Pre-requisites jq
+
+-h, -help,          --help                  Display help
+
+-n, -name,          --name                  Name of thr AKS Cluster
+
+-r, -rgroup,        --rgroup                Name of the AKS Resurce Group 
+
+EOF
+}
+
+options=$(getopt -l "help::,name:,rgroup:" -o "h::n:r:" -a -- "$@")
+
+eval set -- "$options"
+
+while true
+do
+case $1 in
+-h|--help) 
+    showHelp
+    exit 0
+    ;;
+-r|--rgroup)
+    shift
+    AKS_RG_NAME=$1
+    ;;
+-n|--name)
+    shift
+    AKS_NAME=$1
+    ;;
+--)
+    shift
+    break
+    exit 0
+    ;;
+esac
+shift
+done
+
+
 
 PIP=$(curl -s -4 ifconfig.io) 
 
