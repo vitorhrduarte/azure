@@ -76,6 +76,21 @@ funcCheckArguments () {
 }
 
 
+funcCheckRG () {
+   ## Check if RG Exists
+   echo "Checking if RG for $AKS_NAME exists..."
+   EXISTS_RG=$(az group list \
+     --output json | jq -r ".[] | select ( .name == \"$AKS_RG_NAME\") | [ .id ] | @tsv" | wc -l)
+}
+
+
+funcCheckAKS () {
+  ## Check if AKS exists
+  echo "Check if $AKS_NAME exists in RG $AKS_RG_NAME"
+  EXISTS_AKS=$(az aks list \
+    --output json | jq -r ".[] | select( .name == \"$AKS_NAME\") | [.name] | @tsv" | wc -l)
+}
+
 
 
 ##################
@@ -87,6 +102,39 @@ funcCheckArguments () {
 
 ## Check Arguments
 funcCheckArguments
+
+
+## Check if AKS RG Exists
+funcCheckRG
+
+
+if [[ "$EXISTS_RG" == "0" ]]
+then
+  echo "RG $AKS_RG_NAME for $AKS_NAME does not exist"
+  echo "Exiting"
+  exit 3
+elif [[ "$EXISTS_RG" == "1" ]]
+then
+  echo "RG $AKS_RG_NAME exists"
+  echo "Continuing"
+else
+  echo "Some issue with the amount of RG"
+  echo "Exiting"
+  exit 3
+fi	
+
+
+## Check if AKS exist
+funcCheckAKS
+
+echo "Check if AKS exist"
+if [[ "$EXISTS_AKS" != "1" ]]
+then
+  echo "AKS $AKS_NAME does not exist"
+  echo "Exiting"
+  exit 3
+fi
+
 
 ## Get the PIP for the current VM
 echo "Getting PIP for current VM"
