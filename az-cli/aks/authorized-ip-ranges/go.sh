@@ -1,6 +1,13 @@
 ##!/usr/bin/env bash
 
 
+#################
+#
+# Functions
+#
+#################
+
+
 
 showHelp() {
 cat << EOF  
@@ -53,11 +60,43 @@ done
 
 
 
+funcCheckArguments () {
+
+  if [[ -z $AKS_NAME ]]
+  then
+    echo "Empty AKS Name"
+    exit 1
+  fi
+
+  if [[ -z $AKS_RG_NAME ]]
+  then
+    echo "Empty AKS RG Name"
+    exit 1
+  fi
+}
+
+
+
+
+##################
+#
+#    MAIN
+#
+#################
+
+
+## Check Arguments
+funcCheckArguments
+
+## Get the PIP for the current VM
+echo "Getting PIP for current VM"
 PIP=$(curl -s -4 ifconfig.io) 
 
+## Parsing the PIP
 CURRENTPIP=$(az aks show --resource-group $AKS_RG_NAME --name $AKS_NAME --query apiServerAccessProfile.authorizedIpRanges | jq -r ". | @csv" | sed s/\"//g)
 FINALLIST="$PIP/32,$CURRENTPIP"
 
+## Declare the Array for sorting and uniq
 declare -A words
 
 IFS=","
@@ -67,11 +106,13 @@ done
 
 FLIST=$(echo ${!words[@]} | sed 's/ /,/g')
 
+## Set Empty Auth Ranges
 echo "Set Empty List"
 az aks update \
   --resource-group $AKS_RG_NAME \
   --name $AKS_NAME \
   --api-server-authorized-ip-ranges ""
 
+## Update the Auth Ranges with current IP as well as all previous IP in the Ranges
 echo "Update Allowed List"
 echo "az aks update --resource-group $AKS_RG_NAME --name $AKS_NAME --api-server-authorized-ip-ranges $FLIST --debug" | bash 
