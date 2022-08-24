@@ -6,7 +6,6 @@ AKS_RG_NAME="rg-$AKS_NAME"
 PIP=$(curl -s -4 ifconfig.io) 
 
 CURRENTPIP=$(az aks show --resource-group $AKS_RG_NAME --name $AKS_NAME --query apiServerAccessProfile.authorizedIpRanges | jq -r ". | @csv" | sed s/\"//g)
-#CURRENTPIP=$(echo "$CURRENTPIP" | sed s/\"//g)
 FINALLIST="$PIP/32,$CURRENTPIP"
 
 declare -A words
