@@ -65,12 +65,14 @@ funcCheckArguments () {
   if [[ -z $AKS_NAME ]]
   then
     echo "Empty AKS Name"
+    echo "Exiting..."
     exit 1
   fi
 
   if [[ -z $AKS_RG_NAME ]]
   then
     echo "Empty AKS RG Name"
+    echo "Exiting..."
     exit 1
   fi
 }
