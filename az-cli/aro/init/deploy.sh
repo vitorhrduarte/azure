@@ -75,3 +75,5 @@ echo "Get ARO Credentials"
 az aro list-credentials \
   --name $ARO_CLUSTER_NAME \
   --resource-group $ARO_RG_NAME
+
+
