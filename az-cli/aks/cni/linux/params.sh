@@ -1,8 +1,8 @@
 ## Frequent AKS Var's to change
-AKS_NAME="today"
+AKS_NAME="cbl"
 AKS_RG_LOCATION="westeurope"
-AKS_VERSION="1.20.13"
-AKS_VNET_2_OCTETS="10.4"   # Define the fisrt 2 octets for Vnet
+AKS_VERSION="1.22.6"
+AKS_VNET_2_OCTETS="10.1"   # Define the fisrt 2 octets for Vnet
 AKS_ZONES="1 2 3"          # Define AKS Zones
 AKS_2ND_NP_ZONES="1"       # Defines NP Zones
 
@@ -35,6 +35,9 @@ AKS_USR_NP_NODE_DISK_SIZE="100"
 AKS_NP_VM_TYPE="VirtualMachineScaleSets"
 AKS_MAX_PODS_PER_NODE="30"
 
+
+# OS SKU
+OS_SKU="CBLMariner"   # CBLMariner, Ubuntu, Windows2019, Windows2022
 
 ## AKS Networking
 AKS_CNI_PLUGIN="azure"
