@@ -23,7 +23,7 @@ Install Pre-requisites jq
 
 -h, -help,          --help                  Display help
 
--n, -name,          --name                  Name of thr AKS Cluster
+-n, -name,          --name                  Name of the AKS Cluster
 
 -r, -rgroup,        --rgroup                Name of the AKS Resurce Group 
 
