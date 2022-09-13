@@ -31,6 +31,11 @@ AKS_AZ_DISK_URI=$(az disk list \
   --resource-group $AKS_INFRA_RG_NAME \
   --output json | jq -r ".[].id")
 
+## Clean some files
+echo "Clean some files"
+rm -rf azure-disk-pv-name.yaml
+rm -rf azure-disk-pvc-name.yaml
+rm -rf pod.yaml
 
 ## Create PV
 echo "Create PV"
