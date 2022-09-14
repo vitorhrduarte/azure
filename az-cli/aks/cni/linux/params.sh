@@ -1,8 +1,8 @@
 ## Frequent AKS Var's to change
-AKS_NAME="ckad"
+AKS_NAME="calico"
 AKS_RG_LOCATION="westeurope"
-AKS_VERSION="1.24.3"
-AKS_VNET_2_OCTETS="10.2"   # Define the fisrt 2 octets for Vnet
+AKS_VERSION="1.22.6"
+AKS_VNET_2_OCTETS="10.4"   # Define the fisrt 2 octets for Vnet
 AKS_ZONES="1 2 3"          # Define AKS Zones
 AKS_2ND_NP_ZONES="1 2 3"       # Defines NP Zones
 
@@ -18,7 +18,7 @@ AKS_CLUSTER_DOCKER_BRIDGE="172.17.0.1/16"
 AKS_HAS_AZURE_MONITOR="0"     # 1 = AKS has Az Mon enabled
 AKS_HAS_AUTO_SCALER="0"       # 1 = AKS has Auto Scaler enabled
 AKS_HAS_MANAGED_IDENTITY="1"  # 1 = AKS has Managed Identity enabled
-AKS_HAS_NETWORK_POLICY="0"    # 1 = AKS has Azure Net Pol enabled
+AKS_HAS_NETWORK_POLICY="1"    # 1 = AKS has Azure Net Pol enabled
 AKS_HAS_2ND_NODEPOOL="1"      # 1 = AKS has second npool
 AKS_HAS_JUMP_SERVER="0"       # 1 = Deploy Linux Jump Server
 
@@ -47,7 +47,7 @@ AKS_NET_NPOLICY="Calico"   # Calico or Azure
 
 
 ## My ISP PIP
-MY_HOME_PUBLIC_IP=$(curl -4 ifconfig.io)
+MY_HOME_PUBLIC_IP=$(curl -s -4 ifconfig.io)
 
 
 ## VM Settings
