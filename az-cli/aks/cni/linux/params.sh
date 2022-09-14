@@ -43,7 +43,7 @@ OS_SKU="Ubuntu"   # CBLMariner, Ubuntu, Windows2019, Windows2022
 AKS_CNI_PLUGIN="azure"
 AKS_VNET="vnet-"$AKS_CLUSTER_NAME
 AKS_SNET="snet-"$AKS_CLUSTER_NAME
-AKS_NET_NPOLICY="Calico"   # Calico or Azure
+AKS_NET_NPOLICY="calico"   # calico or azure
 
 
 ## My ISP PIP
