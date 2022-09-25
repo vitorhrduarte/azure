@@ -2,22 +2,22 @@
 JUST_BIND="0"              # 1 - If we just want to deploy Bind server
 ALL="1"                    # 1 - If we want to deploy all, VM + Bind
 AKS_VNET_PREFIX="10.3"     # Having in mind Vnet Peering, we need to make sure no Vnet overlaps
-
+AKS_NAME="bcc"
 
 ## Core Networking
-MAIN_VNET_RG="rg-aks-dns"
-MAIN_VNET_NAME="vnet-aks-dns"
+MAIN_VNET_RG="rg-aks-$AKS_NAME"
+MAIN_VNET_NAME="vnet-aks-$AKS_NAME"
 MAIN_VNET_LOCATION="westeurope"
 
 ## AKS SubNet details
 AKS_SUBNET_CIDR="$AKS_VNET_PREFIX.0.0/23"
 
 ## Bind9 Forwarders
-VM_BIND_FORWARDERS_01="1.1.1.1"
-VM_BIND_FORWARDERS_02="8.8.8.8"
+VM_BIND_FORWARDERS_01="168.63.129.16"
+VM_BIND_FORWARDERS_02="1.1.1.1"
 
 ## VM Specific Networking
-VM_DNS_SUBNET_NAME="dns-server"
+VM_DNS_SUBNET_NAME="snet-dns-server"
 VM_DNS_SNET_CIDR="$AKS_VNET_PREFIX.10.0/28"
 VM_DNS_PRIV_IP="$AKS_VNET_PREFIX.10.4/32"
 
