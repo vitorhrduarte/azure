@@ -1,0 +1,1 @@
+cat base-file.txt | sed s/$/,/g | xargs | sed "s/, /,/g" > o.txt
