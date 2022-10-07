@@ -43,8 +43,6 @@ if [ $HAS_AZURE_MONITOR -eq 1 ]; then
   az aks create \
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
-  --service-principal $SP \
-  --client-secret $SPPASS \
   --node-count $AKS_SYS_NODE_COUNT \
   --node-vm-size $AKS_SYS_NODE_SIZE \
   --node-osdisk-size $AKS_SYS_NODE_DISK_SIZE \
@@ -66,6 +64,9 @@ if [ $HAS_AZURE_MONITOR -eq 1 ]; then
   --node-osdisk-type Ephemeral \
   --nodepool-name $AKS_SYS_NODE_POOL_NAME \
   --tags "env=sysnpool" \
+  --enable-managed-identity \
+  --os-sku $OS_SKU \
+  --zones $AKS_SYSNP_ZONES \
   --debug 
 else
   echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -74,8 +75,6 @@ else
   az aks create \
   --resource-group $AKS_RG_NAME \
   --name $AKS_CLUSTER_NAME \
-  --service-principal $SP \
-  --client-secret $SPPASS \
   --node-count $AKS_SYS_NODE_COUNT \
   --node-vm-size $AKS_SYS_NODE_SIZE \
   --node-osdisk-size $AKS_SYS_NODE_DISK_SIZE \
@@ -96,6 +95,9 @@ else
   --node-osdisk-type Ephemeral \
   --nodepool-name $AKS_SYS_NODE_POOL_NAME \
   --tags "env=sysnpool" \
+  --enable-managed-identity \
+  --os-sku $OS_SKU \
+  --zones $AKS_SYS_NP_ZONES \
   --debug
 fi
 
@@ -117,6 +119,8 @@ else
     --mode User \
     --node-count $AKS_USER_NODE_COUNT \
     --node-vm-size $AKS_USER_NODE_SIZE \
+    --os-sku $OS_SKU \
+    --zones $AKS_USR_NP_ZONES \
     --debug
   fi  
 fi
@@ -133,6 +137,8 @@ az aks nodepool add \
   --node-osdisk-size  $AKS_WINDOWS_NODE_DISK_SIZE \
   --node-osdisk-type Ephemeral \
   --tags "env=winnpool" \
+  --os-sku $OS_WIN_SKU \
+  --zones $AKS_WIN_NP_ZONES \
   --debug
 
 if [[ "$HAS_JUMP_VMS" == "1" ]]
