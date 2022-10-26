@@ -113,20 +113,43 @@ echo "Create Nginx LB Reverse Proxy"
 az vm create \
   --resource-group $CLUSTER_RG_NAME \
   --authentication-type $WN_AUTH_TYPE \
-  --name "$LB_NAME$j" \
-  --computer-name "$LB_INTERNAL_NAME$j" \
-  --image $LB_IMAGE \
-  --size $LB_SIZE \
+  --name "$WN_LB_NAME$j" \
+  --computer-name "$WN_LB_INTERNAL_NAME$j" \
+  --image $WN_LB_IMAGE \
+  --size $WN_LB_SIZE \
   --admin-username $GENERIC_ADMIN_USERNAME \
   --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
-  --storage-sku $LB_STORAGE_SKU \
-  --os-disk-size-gb $LB_OS_DISK_SIZE \
-  --os-disk-name "$LB_NAME$j""_disk_01" \
+  --storage-sku $WN_LB_STORAGE_SKU \
+  --os-disk-size-gb $WN_LB_OS_DISK_SIZE \
+  --os-disk-name "$WN_LB_NAME$j""_disk_01" \
   --vnet-name $CLUSTER_VNET_NAME \
   --subnet $CLUSTER_VNET_SNET_NAME \
   --public-ip-address "" \
-  --tags $LB_TAGS \
+  --tags $WN_LB_TAGS \
   ##--debug
+
+
+## Create ReverProxy LB for CCP
+echo "Create ReverProxy LB for CCP"
+az vm create \
+  --resource-group $CLUSTER_RG_NAME \
+  --authentication-type $WN_AUTH_TYPE \
+  --name "$CCP_LB_NAME$j" \
+  --computer-name "$CCP_LB_INTERNAL_NAME$j" \
+  --image $CCP_LB_IMAGE \
+  --size $CCP_LB_SIZE \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --storage-sku $CCP_LB_STORAGE_SKU \
+  --os-disk-size-gb $CCP_LB_OS_DISK_SIZE \
+  --os-disk-name "$CCP_LB_NAME$j""_disk_01" \
+  --vnet-name $CLUSTER_VNET_NAME \
+  --subnet $CLUSTER_VNET_SNET_NAME \
+  --public-ip-address "" \
+  --tags $CCP_LB_TAGS \
+  ##--debug
+
+
 
 
 echo "END"
