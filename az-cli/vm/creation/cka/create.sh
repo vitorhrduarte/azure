@@ -108,5 +108,26 @@ do
 done
 
 
+## Create Nginx LB Reverse Proxy
+echo "Create Nginx LB Reverse Proxy"
+az vm create \
+  --resource-group $CLUSTER_RG_NAME \
+  --authentication-type $WN_AUTH_TYPE \
+  --name "$LB_NAME$j" \
+  --computer-name "$LB_INTERNAL_NAME$j" \
+  --image $LB_IMAGE \
+  --size $LB_SIZE \
+  --admin-username $GENERIC_ADMIN_USERNAME \
+  --ssh-key-values $ADMIN_USERNAME_SSH_KEYS_PUB \
+  --storage-sku $LB_STORAGE_SKU \
+  --os-disk-size-gb $LB_OS_DISK_SIZE \
+  --os-disk-name "$LB_NAME$j""_disk_01" \
+  --vnet-name $CLUSTER_VNET_NAME \
+  --subnet $CLUSTER_VNET_SNET_NAME \
+  --public-ip-address "" \
+  --tags $LB_TAGS \
+  ##--debug
+
+
 echo "END"
 
