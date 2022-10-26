@@ -112,7 +112,7 @@ done
 echo "Create Nginx LB Reverse Proxy"
 az vm create \
   --resource-group $CLUSTER_RG_NAME \
-  --authentication-type $WN_AUTH_TYPE \
+  --authentication-type $WN_LB_AUTH_TYPE \
   --name "$WN_LB_NAME" \
   --computer-name "$WN_LB_INTERNAL_NAME" \
   --image $WN_LB_IMAGE \
@@ -133,7 +133,7 @@ az vm create \
 echo "Create ReverProxy LB for CCP"
 az vm create \
   --resource-group $CLUSTER_RG_NAME \
-  --authentication-type $WN_AUTH_TYPE \
+  --authentication-type $CCP_LB_AUTH_TYPE \
   --name "$CCP_LB_NAME" \
   --computer-name "$CCP_LB_INTERNAL_NAME" \
   --image $CCP_LB_IMAGE \
