@@ -18,8 +18,8 @@ showHelp() {
 cat << EOF  
 Usage: 
 
-bash edit-hosts-file.sh --help/-h  [for help]
-bash edit-hosts-file.sh -o/--operation <add remove list> -f/--file <local-path-file-name>
+bash change-hosts-file.sh --help/-h  [for help]
+bash change-hosts-file.sh -o/--operation <add remove list> -f/--file <local-path-file-name>
 
 Example: bash edit-hosts-file.sh -o list -f input-servers.txt
 
