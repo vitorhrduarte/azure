@@ -1,0 +1,29 @@
+sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install haproxy -y
+vi /etc/haproxy/haproxy.cfg
+systemctl restart haproxy
+systemctl status haproxy
+
+vi /etc/haproxy/haproxy.cfg
+
+
+
+
+Add in /etc/haproxy/haproxy.cfg
+
+
+frontend fe-apiserver
+   bind 0.0.0.0:6443
+   mode tcp
+   option tcplog
+   default_backend be-apiserver
+
+
+backend be-apiserver
+   mode tcp
+   option tcplog
+   option tcp-check
+   balance roundrobin
+   default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+
+       server master1 10.6.0.4:6443 check
+       server master2 10.6.0.5:6443 check
