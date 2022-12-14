@@ -6,7 +6,6 @@ set -e
 LAN_SUFFIX="lan"
 VM_GATEWAY="192.168.88.1"
 VM_DNS_SERVER="192.168.88.1"
-PXE_SERVER="utilvm.lan"
 
 ## Functions
 showHelp() {
@@ -102,7 +101,7 @@ autoinstall:
   drivers:
     install: false
   identity:
-    hostname: $PXE_SERVER
+    hostname: $VM_NAME
     password: $VM_SUDO_USER_PASS
     realname: $VM_SUDO_USER
     username: $VM_SUDO_USER
