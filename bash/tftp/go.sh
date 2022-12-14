@@ -6,6 +6,7 @@ set -e
 LAN_SUFFIX="lan"
 VM_GATEWAY="192.168.88.1"
 VM_DNS_SERVER="192.168.88.1"
+PXE_SERVER="utilvm.lan"
 
 ## Functions
 showHelp() {
