@@ -1,0 +1,51 @@
+upstream k8sclusterapp1 {
+        ip_hash;
+        server wknode1.internal.cloudapp.net:32265 max_fails=3 fail_timeout=10s;
+        server wknode2.internal.cloudapp.net:32265 max_fails=3 fail_timeout=10s;
+        server wknode3.internal.cloudapp.net:32265 max_fails=3 fail_timeout=10s;
+}
+
+
+upstream k8sclusterapp2 {
+        server wknode1.internal.cloudapp.net:31734 max_fails=3 fail_timeout=10s;
+        server wknode2.internal.cloudapp.net:31734 max_fails=3 fail_timeout=10s;
+        server wknode3.internal.cloudapp.net:31734 max_fails=3 fail_timeout=10s;
+}
+
+server {
+        listen 80;
+
+        location /app/1 {
+            proxy_pass http://k8sclusterapp1;
+            rewrite ^/app/1(/|$)(.*)$ /$2 break;
+            proxy_set_header HOST $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        location /app/2 {
+            proxy_pass http://k8sclusterapp2;
+            rewrite ^/app/2(/|$)(.*)$ /$2 break;
+            proxy_set_header HOST $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+}
+
+
+
+
+
+
+# cat /etc/nginx/nginx.conf 
+user www-data;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+worker_processes  2;
+
+events {
+        worker_connections 4096;
+        multi_accept on;
+        use epoll;
+}
