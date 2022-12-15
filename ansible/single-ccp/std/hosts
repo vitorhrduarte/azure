@@ -1,0 +1,11 @@
+[masters]
+ccp1 ansible_user=<<REPLACE_USER>>
+ccp1 ansible_user=<<REPLACE_USER>>
+
+[workers]
+wkn1 ansible_user=<<REPLACE_USER>>
+wkn2 ansible_user=<<REPLACE_USER>>
+wkn3 ansible_user=<<REPLACE_USER>>
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
