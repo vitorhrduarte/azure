@@ -1,0 +1,14 @@
+[masters]
+ccp1 ansible_user=gits
+ccp2 ansible_user=gits
+
+[master]
+ccp1 ansible_user=gits
+
+[workers]
+wknode1 ansible_user=gits
+wknode2 ansible_user=gits
+wknode3 ansible_user=gits
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

@@ -1,0 +1,6 @@
+Run in Main CCP
+echo $(kubeadm token create --print-join-command) --control-plane --certificate-key $(kubeadm init phase upload-certs --upload-certs | grep -vw -e certificate -e Namespace)'
+
+
+Run in Second/Child CCP the output of previous command
+        

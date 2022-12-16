@@ -1,44 +1,36 @@
 ---
-- hosts: masters
-  remote_user: <<REPLACE USER>>
+- hosts: master
+  remote_user: "{{ ansible_user }}"
   become: yes
   become_method: sudo
   become_user: root
   gather_facts: yes
-  connection: ssh
-
+  connection: ssh 
+  
   vars_prompt:
 
    - name: "pod_network_cidr"
      prompt: "Enter the Pod Network CIDR, example: 192.168.100.0/24"
      private: no
 
-   - name: "k8s_master_ip"
-     prompt: "Enter the Apiserver advertise address, example: 192.168.0.26"
+   - name: "k8s_loadbalancer_ip"
+     prompt: "Enter the CCP LB advertise addressi IP:PORT, example: 192.168.0.26:6443"
      private: no
-
-   - name: "pod_network_manifest_file"
-     prompt: "Enter the Pod network manifest file URL, Your choice could be flannel, weave or calico, etc."
-     private: no
-
-  #- name: "rbac_manifest_file"
-  #   prompt: "Enter the RBAC manifest file URL"
-  #   private: no 
 
   tasks:
-
-   - name: Intilizing Kubernetes Cluster
-     command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}"  --apiserver-advertise-address "{{ k8s_master_ip }}"
-     run_once: true
-     delegate_to: "{{ k8s_master_ip }}"
+   - name: initialize the cluster
+     shell: kubeadm init --control-plane-endpoint "{{ k8s_loadbalancer_ip }}" --upload-certs --pod-network-cidr "{{ pod_network_cidr  }}" >> cluster_initialized.txt
+     args:
+       chdir: $HOME
+       creates: cluster_initialized.txt
 
    - pause: seconds=30
 
    - name: Create directory for kube config.
-     become_user: <<REPLACE USER>>
+     become_user: "{{ ansible_user }}"
      become_method: sudo
      become: yes
-     file: 
+     file:
        path: /home/{{ansible_user }}/.kube
        state: directory
        owner: "{{ ansible_user }}"
@@ -60,21 +52,21 @@
    - pause: seconds=10
 
    - name: Remove the cache directory.
-     become_user: <<REPLACE USER>>
+     become_user: "{{ ansible_user }}"
      become_method: sudo
      become: yes
-     file: 
+     file:
        path: /home/{{ ansible_user }}/.kube/cache
        state: absent
 
-   - name: Create Pod Network & RBAC.
-     become_user: <<REPLACE USER>>
-     become_method: sudo
-     become: yes
-     command: "{{ item }}"
-     with_items: 
-        - kubectl apply -f {{ pod_network_manifest_file }}
-    #   - kubectl apply -f {{ rbac_manifest_file }}
+  #- name: Create Pod Network & RBAC.
+  #   become_user: "{{ ansible_user }}"
+  #   become_method: sudo
+  #   become: yes
+  #   command: "{{ item }}"
+  #   with_items:
+  #      - kubectl apply -f {{ pod_network_manifest_file }}
+  #  #   - kubectl apply -f {{ rbac_manifest_file }}
 
    - pause: seconds=30
 
@@ -87,4 +79,11 @@
 
    - name: Copy join command to local file.
      local_action: copy content="{{ kubernetes_join_command.stdout_lines[0] }}" dest="/tmp/kubernetes_join_command" mode=0777
-...
+
+   - name: install Pod network
+     become: yes
+     become_user: "{{ ansible_user }}"
+     shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml >> pod_network_setup.txt
+     args:
+       chdir: $HOME
+       creates: pod_network_setup.txt

@@ -1,0 +1,1 @@
+read -p "Remote User Name: " ansuser && read -p "Remote Host IP/Name: " ansremotehost && scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $ansuser@$ansremotehost:/home/$ansuser/.kube/config $HOME/.kube/config

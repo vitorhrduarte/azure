@@ -1,6 +1,6 @@
 ---
 - hosts: "masters, workers"
-  remote_user: <<REPLACE USER>>
+  remote_user: <<REPLACE_USER>>
   become: yes
   become_method: sudo
   become_user: root
@@ -69,18 +69,42 @@
       filename: kubernetes
       mode: 0600
 
-  - name: Installing Kubernetes Cluster Packages.
+  - name: Installing Kubectl
     apt:
-      name:
-      - kubeadm
-      - kubectl
-      - kubelet
+      name: kubectl=1.23.0-00
       state: present
+
+  - name: Install kubelet
+    apt:
+       name: kubelet=1.22.0-00
+       state: present
+       update_cache: true
+
+  - name: Install kubeadm
+    apt:
+       name: kubeadm=1.22.0-00
+       state: present
+
 
   - name: Enable service kubelet, and enable persistently
     service:
       name: kubelet
       enabled: yes
+ 
+  - name: Hold kubectl
+    dpkg_selections:
+      name: kubectl  
+      selection: hold
+
+  - name: Hold kubeadm
+    dpkg_selections:
+      name: kubeadm
+      selection: hold
+
+  - name: Hold kubelet
+    dpkg_selections:
+      name: kubelet
+      selection: hold
 
   - name: Update all packages on a Debian/Ubuntu
     apt:

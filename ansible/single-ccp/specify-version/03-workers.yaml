@@ -1,6 +1,6 @@
 ---
 - hosts: workers
-  remote_user: <<REPLACE USER>>
+  remote_user: <<REPLACE_USER>>
   become: yes
   become_method: sudo
   become_user: root
