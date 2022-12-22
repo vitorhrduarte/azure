@@ -129,6 +129,7 @@ autoinstall:
     authorized-keys:
     - $VM_SUDO_USER_SSH_PUB_KEYS
     - $VM_SUDO_USER_SSH_PUB_KEYS_01
+    - $VM_SUDO_USER_SSH_PUB_KEYS_02
     install-server: true
   storage:
     grub:
