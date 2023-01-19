@@ -6,9 +6,9 @@ resource "azurerm_resource_group" "rg" {
   name        = "${var.aks_specifics.aks_rg_name_prefix}${var.aks_name}" 
   location    = var.aks_location
   tags        = {
-         "env" = var.aks_cluster_tags.env
-         "purpose" = var.aks_cluster_tags.purpose
-         "provider" = var.aks_cluster_tags.provider
+    "env" = var.aks_cluster_tags.env
+    "purpose" = var.aks_cluster_tags.purpose
+    "provider" = var.aks_cluster_tags.provider
   }
 }
 
@@ -43,18 +43,16 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
   role_based_access_control_enabled = var.aks_specifics.aks_enabled_rbac
 
   linux_profile {
-    admin_username = var.linux_windows_profile.linux_user
+    admin_username = var.aks_linux_username
     
     ssh_key {
-      key_data = file(var.linux_windows_profile.linux_user_pub_key)
+      key_data = file(var.aks_linux_username_pubkey)
     }
   }
- 
   windows_profile {
-    admin_username = var.linux_windows_profile.windows_user
-    admin_password = var.linux_windows_profile.windows_user_password
+    admin_username = var.aks_windows_username
+    admin_password = var.aks_windows_username_password
   }
-
   network_profile {
     network_plugin    = var.aks_specifics.aks_network_plugin
     load_balancer_sku = var.aks_specifics.aks_network_lb_sku
@@ -71,11 +69,9 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
       "env-vmss" = var.aks_cluster_tags.env
     }
   }
-
   identity {
     type = var.aks_specifics.aks_identity_type
   }
-
   tags = {
     "env" = var.aks_cluster_tags.env
   }
@@ -92,19 +88,18 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks-np" {
     "env" = var.aks_cluster_tags.env
   }
 
-  orchestrator_version = "1.25.4"
-  os_disk_size_gb = "40"
-  os_disk_type = "Ephemeral"
-  os_sku = "Ubuntu"
+  orchestrator_version = var.aks_version
+  os_disk_size_gb      = var.aks_user_nodepool_specifics.os_disk_size_gb
+  os_disk_type         = var.aks_user_nodepool_specifics.os_disk_type
+  os_sku               = var.aks_user_nodepool_specifics.os_sku
 
-  max_count             = 2
-  min_count             = 1
-  enable_auto_scaling   = "true"
+  max_count            = var.aks_user_nodepool_specifics.max_count 
+  min_count            = var.aks_user_nodepool_specifics.min_count
+  enable_auto_scaling  = var.aks_user_nodepool_specifics.enable_auto_scaling
 
-
-  os_type = "Linux"
-  priority = "Regular"
-  zones = [1, 2, 3]
+  os_type              = var.aks_user_nodepool_specifics.os_type
+  priority             = var.aks_user_nodepool_specifics.priority
+  zones                = var.aks_user_nodepool_specifics.zones
 
   tags = {
     "env-vmss" = "dev"
