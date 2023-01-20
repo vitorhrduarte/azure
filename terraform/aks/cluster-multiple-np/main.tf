@@ -40,6 +40,8 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
   dns_prefix              = "${var.aks_specifics.aks_name_prefix}${var.aks_name}"
   kubernetes_version      = var.aks_version
 
+  api_server_authorized_ip_ranges = var.aks_local_pip
+
   role_based_access_control_enabled = var.aks_specifics.aks_enabled_rbac
 
   linux_profile {
