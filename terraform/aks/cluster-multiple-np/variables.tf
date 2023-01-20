@@ -4,6 +4,11 @@ variable "aks_linux_username" {
   description = "Env Var for Linux User Name"
   }
 
+variable "aks_local_pip" {
+  type = list
+  description = "Local PIP"
+}
+
 variable "aks_linux_username_pubkey" {
   type = string
   sensitive = true
