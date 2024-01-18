@@ -1,0 +1,16 @@
+FROM debian:stable-slim
+
+LABEL version="1.0" \
+      description="Kubernetes FortIO Pod" \
+      maintainer="vitorhrd@gmail.com"
+
+ARG package_version=1.62.1
+ENV VERSION=$package_version
+
+RUN apt update \
+    && apt install wget -y  \
+    && wget https://github.com/fortio/fortio/releases/download/v${VERSION}/fortio_${VERSION}_amd64.deb \
+    && dpkg -i fortio_${VERSION}_amd64.deb \
+    && apt remove -y wget \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
