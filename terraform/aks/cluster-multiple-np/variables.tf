@@ -35,7 +35,7 @@ variable "aks_location" {
 
 variable "aks_name" {
   type = string
-  default = "change-me"
+  default = "lab01"
   description = "AKS Name"
 }
 
@@ -49,7 +49,7 @@ variable "aks_sys_nodepool_specifics" {
   default = {
     name       = "sysnp01"
     node_count = "1"
-    vm_size    = "Standard_D2_v2"
+    vm_size    = "Standard_DS3_v2"
     max_pods   = "30"
     type       = "VirtualMachineScaleSets" 
   }
@@ -75,17 +75,17 @@ variable "aks_user_nodepool_specifics" {
 
   default = {
     name       = "usrnp01" 
-    vm_size    = "Standard_DS2_v2" 
+    vm_size    = "Standard_DS3_v2" 
     node_count = "1"
     max_pods   = "30"
     mode       = "User"
     os_disk_size_gb     = 40
     os_disk_type        = "Ephemeral" 
     os_sku              = "Ubuntu"
-    max_count           = 2
-    min_count           = 1
+    max_count           = 5
+    min_count           = 2
     enable_auto_scaling = true
-    os_type             =  "Linux"
+    os_type             = "Linux"
     priority            = "Regular"
     zones               = ["1","2","3"]
   }
