@@ -1,0 +1,23 @@
+# My Alpine image
+FROM alpine:latest
+
+LABEL version="1.0" \
+      description="Kubernetes Helper Pod" \
+      maintainer="vitorhrd@gmail.com"
+
+# Update and upgrade alpine packages
+RUN apk update \
+    && apk upgrade
+
+# Install useful packages
+RUN apk add --no-cache \
+       netcat-openbsd nmap curl iputils tcpdump nginx openssh bind-tools \
+       hping3 --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
+
+# Install kubectl
+RUN curl -s -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x ./kubectl \
+    && mv ./kubectl /usr/local/bin/kubectl
+
+# Clean up 
+RUN rm -rf /var/cache/apk/*
